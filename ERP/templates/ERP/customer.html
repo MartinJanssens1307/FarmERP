@@ -1,0 +1,17 @@
+{% extends "ERP/layout.html" %}
+
+{% block head %}
+    <title>AgriManage ERP - {{ customer.name }}</title>
+{% endblock %}
+
+
+{% block body %}
+
+    <ul>
+        <li>{{ customer.name }}</li>
+        <li>{{ customer.address }}</li>
+        <li>{{ customer.phone }}</li>
+        <li>{{ customer.email }}</li>
+    </ul>
+
+{% endblock %}

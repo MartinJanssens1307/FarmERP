@@ -1,0 +1,35 @@
+{% extends "ERP/layout.html" %}
+
+{% block head %}
+    <title>AgriManage ERP - Customers</title>
+{% endblock %}
+
+
+{% block body %}
+    <div class="table-container" style="display: flex; justify-content: center; align-items: center; width: 100%;">
+        <table class="table table-striped table-bordered" style="border: 2px solid #343a40; margin: 20px auto;">
+            <thead class="thead-dark">
+                <tr>
+                    <th style="border: 1px solid #343a40; padding: 6px;">ID</th>
+                    <th style="border: 1px solid #343a40; padding: 6px;">Name</th>
+                    <th style="border: 1px solid #343a40; padding: 6px;">Email</th>
+                    <th style="border: 1px solid #343a40; padding: 6px;">Phone</th>
+                    <th style="border: 1px solid #343a40; padding: 6px;">Address</th>
+                    <!-- Add more columns if your Customer model has more fields -->
+                </tr>
+            </thead>
+            <tbody>
+                {% for customer in customers %}
+                    <tr>
+                        <td style="border: 1px solid #343a40; padding: 6px;"><a href="{% url 'customer' customer.id %}">{{ customer.id }}</a></td>
+                        <td style="border: 1px solid #343a40; padding: 6px;">{{ customer.name }}</td>
+                        <td style="border: 1px solid #343a40; padding: 6px;">{{ customer.email }}</td>
+                        <td style="border: 1px solid #343a40; padding: 6px;">{{ customer.phone }}</td>
+                        <td style="border: 1px solid #343a40; padding: 6px;">{{ customer.address }}</td>
+                        <!-- Add more cells if your Customer model has more fields -->
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+{% endblock %}
