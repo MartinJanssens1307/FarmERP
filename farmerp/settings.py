@@ -28,7 +28,7 @@ SECRET_KEY = "django-insecure-$1r@13ny-cvfp)q$p)5pzabyq&#^1+19do7lb3no@ddf_+24#y
 DEBUG = True
 
 ALLOWED_HOSTS = [
-    farmerp.onrender.com
+    "farmerp-swyv.onrender.com"
 ]
 
 
