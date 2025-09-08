@@ -3,6 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" href="/static/Logo.png" type="image/png">
+    <link rel="shortcut icon" href="/static/Logo.png" type="image/png">
     {% block head %}
     {% endblock %}
     <script src="https://cdn.tailwindcss.com"></script>
@@ -19,19 +21,10 @@
 </head>
 <body class="flex flex-col min-h-screen">
     <div class="flex flex-col flex-1">
-        <div id="mobile-menu" class="md:hidden bg-white shadow-lg py-4 px-6 rounded-b-lg hidden">
-            <nav class="flex flex-col space-y-3">
-                <a href="{% url 'index' %}" class="text-gray-700 hover:text-green-600 font-medium py-2">Home</a>
-                <a href="#" class="text-gray-700 hover:text-green-600 font-medium py-2">Features</a>
-                <a href="#" class="text-gray-700 hover:text-green-600 font-medium py-2">About Us</a>
-                <a href="#" class="text-gray-700 hover:text-green-600 font-medium py-2">Contact</a>
-                <a href="#" class="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition duration-300 text-center">Login</a>
-            </nav>
-        </div>
         <div class="bg-gray-100 text-gray-800 flex-1">
             <header class="bg-white shadow-md py-4 px-6 md:px-12 flex justify-between items-center rounded-b-lg">
                 <div class="flex items-center">
-                    <img class="size-12 shrink-0" src="static/Logo.png" alt="AgriManage Logo" class="mr-3">
+                    <img class="h-12 w-auto shrink-0 mr-3" src="static/Logo.png" alt="FarmERP Logo">
                     <h1 class="text-2xl font-bold text-green-700">FarmERP</h1>
                 </div>
                 <nav class="hidden md:flex space-x-6">
@@ -50,10 +43,10 @@
             {% endblock %}
         </div>
     </div>
-    <footer class="bg-gray-800 text-white py-8 px-6 md:px-12 text-center">
+    <footer class="bg-gray-800 text-white py-3 px-6 md:px-12 text-center">
         <div class="flex flex-col md:flex-row justify-around items-center max-w-6xl mx-auto mb-6">
             <div class="mb-4 md:mb-0">
-                <h5 class="text-xl font-bold mb-2">AgriManage ERP</h5>
+                <h5 class="text-xl font-bold mb-2">FarmERP</h5>
                 <p class="text-gray-400">Smart Solutions for Modern Agriculture</p>
             </div>
             <div class="mb-4 md:mb-0">
@@ -66,26 +59,31 @@
             </div>
             <div>
                 <h5 class="text-lg font-semibold mb-2">Connect With Us</h5>
-                <div class="flex justify-center space-x-4">
-                    <a href="https://www.facebook.com/events/s/loulou-players-dj-set/2141618402951986/?rdid=zNtU0iiPoMISFjAu&share_url=https%3A%2F%2Fwww.facebook.com%2Fshare%2F16LSyxhJ1X#" class="text-gray-400 hover:text-green-400"><img src="https://placehold.co/24x24/888888/ffffff?text=F" alt="Facebook" class="w-6 h-6"></a>
-                    <a href="#" class="text-gray-400 hover:text-green-400"><img src="https://placehold.co/24x24/888888/ffffff?text=T" alt="Twitter" class="w-6 h-6"></a>
-                    <a href="#" class="text-gray-400 hover:text-green-400"><img src="https://placehold.co/24x24/888888/ffffff?text=L" alt="LinkedIn" class="w-6 h-6"></a>
+                <div class="flex justify-center space-x-5">
+                    <a href="#" class="text-gray-400 hover:text-blue-700 transition-colors duration-200" aria-label="Facebook">
+                        <svg class="w-6 h-6 hover:w-10 h-auto" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" role="img" aria-hidden="true">
+                            <circle cx="12" cy="12" r="10" fill="currentColor"/>
+                            <text x="12" y="16" text-anchor="middle" font-size="11" fill="#fff" font-family="Inter, Arial, sans-serif">F</text>
+                        </svg>
+                    </a>
+
+                    <a href="#" class="text-gray-400 hover:text-slate-950 transition-colors duration-200" aria-label="X">
+                        <svg class="w-6 h-6 hover:w-10 h-auto" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" role="img" aria-hidden="true">
+                            <circle cx="12" cy="12" r="10" fill="currentColor"/>
+                            <text x="12" y="16" text-anchor="middle" font-size="11" fill="#fff" font-family="Inter, Arial, sans-serif">X</text>
+                        </svg>
+                    </a>
+
+                    <a href="#" class="text-gray-400 hover:text-fuchsia-600 transition-colors duration-200" aria-label="Instagram">
+                        <svg class="w-6 h-6 hover:w-10 h-auto" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" role="img" aria-hidden="true">
+                            <circle cx="12" cy="12" r="10" fill="currentColor"/>
+                            <text x="12" y="16" text-anchor="middle" font-size="10" fill="#fff" font-family="Inter, Arial, sans-serif">I</text>
+                        </svg>
+                    </a>
                 </div>
             </div>
         </div>
-        <p class="text-gray-500 text-sm">&copy; 2025 AgriManage ERP. All rights reserved.</p>
+        <p class="text-gray-500 text-sm">&copy; 2025 FarmERP. All rights reserved.</p>
     </footer>
-    <script>
-        // Keep only the mobile menu toggle; remove layout adjustments that caused extra space
-        document.addEventListener('DOMContentLoaded', function() {
-            const mobileMenuToggle = document.querySelector('header button');
-            if (mobileMenuToggle) {
-                mobileMenuToggle.addEventListener('click', function() {
-                    const mobileMenu = document.getElementById('mobile-menu');
-                    if (mobileMenu) mobileMenu.classList.toggle('hidden');
-                });
-            }
-        });
-    </script>
 </body>
 </html>
