@@ -28,7 +28,7 @@
                     <a href="{% url 'index' %}">
                     <img class="h-12 w-auto shrink-0 mr-3" src="{% static 'Logo.png' %}" alt="FarmERP Logo">
                     </a>
-                    <h1 class="text-2xl font-bold text-green-700">FarmERP</h1>
+                    <h1 class="text-2xl font-bold"><span class="text-green-700">Farm</span><span class="text-yellow-500">ERP</span></h1>
                 </div>
                 <nav class="hidden md:flex space-x-6">
                     <a href="{% url 'index' %}" class="text-gray-700 hover:text-green-600 font-medium">Home</a>
@@ -37,9 +37,6 @@
                     <a href="#" class="text-gray-700 hover:text-green-600 font-medium">Contact</a>
                     <a href="#" class="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition duration-300">Login</a>
                 </nav>
-                <button class="md:hidden text-gray-700 focus:outline-none">
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7"></path></svg>
-                </button>
             </header>
 
             {% block body %}
