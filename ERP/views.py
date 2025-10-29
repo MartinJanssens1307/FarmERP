@@ -1,8 +1,11 @@
 from django.shortcuts import redirect, render
 from django.http import HttpResponse
+from django.views import View
+from django.views.generic import DetailView, ListView
+from django.views.generic.edit import CreateView
 
 from .models import Customer, Transaction
-from django import forms
+from .forms.forms import CustomerForm, CreateCustomerForm, CustomerMainForm
 
 def index(request):
     return render(request, "ERP/index.html")
@@ -11,20 +14,20 @@ def construction(request):
     return render(request, "ERP/construction.html")
 
 def createCustomer(request):
-    class CustomerForm(forms.ModelForm):
-        class Meta:
-            model = Customer
-            fields = '__all__'
 
     if request.method == "POST":
-        form = CustomerForm(request.POST)
+        form = CreateCustomerForm(request.POST)
         if form.is_valid():
             form.save()
             return redirect('customers')
     else:
-        form = CustomerForm()
+        form = CreateCustomerForm()
 
-    return render(request, "ERP/createCustomer.html", {"form": form})
+    return render(request, "ERP/customer_form.html", {"form": form})
+
+class CustomerCreateView(CreateView):
+    model = Customer
+    form_class = CreateCustomerForm
 
 def customers(request):
     customers = Customer.objects.all()
@@ -32,14 +35,12 @@ def customers(request):
         "customers":customers
         })
 
-def customer(request, id):
-    customer = Customer.objects.get(pk=id)
-    transactions = customer.transactions.all()
+class CustomerListView(ListView):
+    model = Customer
 
-    class CustomerForm(forms.ModelForm):
-        class Meta:
-            model = Customer
-            fields = ['name', 'address', 'phone', 'email']
+def customer(request, pk):
+    customer = Customer.objects.get(pk=pk)
+    transactions = customer.transactions.all()
 
     if request.method == "POST":
         form = CustomerForm(request.POST, instance=customer)
@@ -55,7 +56,21 @@ def customer(request, id):
         "form": form
     })
 
-def delete_customer(request, id):
-    customer = Customer.objects.get(pk=id)
+class CustomerDetailView(DetailView):
+    model = Customer
+    #template_name = "ERP/customer.html"
+
+def delete_customer(request, pk):
+    customer = Customer.objects.get(pk=pk)
     customer.delete()
     return redirect('customers')
+
+class SimpleFormTestView(View):
+    """
+    PURPOSE: Renders the CustomerMainForm just to verify the Tailwind styling 
+    from the Mixin is correctly applied.
+    """
+    def get(self, request):
+        # Create a blank form instance
+        form = CustomerMainForm()
+        return render(request, 'ERP/test_form_display.html', {'form': form})
