@@ -16,7 +16,6 @@ class Migration(migrations.Migration):
             name="role",
             field=models.CharField(
                 choices=[("client", "Client"), ("supplier", "Supplier")],
-                default=django.utils.timezone.now,
                 max_length=12,
             ),
             preserve_default=False,
