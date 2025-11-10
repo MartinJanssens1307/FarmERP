@@ -10,6 +10,7 @@
     {% endblock %}
     <link rel="stylesheet" href="{% static 'css/styles.css' %}">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/htmx.org@2.0.8/dist/htmx.min.js" integrity="sha384-/TgkGk7p307TH7EXJDuUlgG3Ce1UVolAOFopFekQkkXihi5u/6OCvVKyz1W+idaz" crossorigin="anonymous"></script>
     <style>
         body {
             font-family: 'Inter', sans-serif;
@@ -36,55 +37,32 @@
                     <a href="#" class="text-gray-700 hover:text-green-600 font-medium">Features</a>
                     <a href="#" class="text-gray-700 hover:text-green-600 font-medium">About Us</a>
                     <a href="#" class="text-gray-700 hover:text-green-600 font-medium">Contact</a>
-                    <a href="#" class="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition duration-300">Login</a>
+                    {% if user.is_authenticated %}
+                    <a href="/admin" class="text-gray-700 hover:text-yellow-500 font-medium">Admin</a>
+                    <form method="post" action="{% url 'logout' %}" style="display: inline;">
+                        {% csrf_token %}
+                        <button type="submit" class="bg-red-700 text-white px-4 py-2 rounded-lg hover:bg-red-800 transition duration-300">
+                            Logout
+                        </button>
+                    </form>
+                    {% else %}
+                    <a href="{% url 'login' %}" class="bg-sky-500 text-white px-4 py-2 rounded-lg hover:bg-sky-700 transition duration-300">Login</a>
+                    <a href="{% url 'register' %}" class="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition duration-300">Register</a>
+                    {% endif %}
                 </nav>
             </header>
-
+    {% if messages %}
+        <ul class="messages">
+            {% for message in messages %}
+                <li {% if message.tags %} class="{{ message.tags }} alert-{{ message.tags }}"{% endif %}>
+                    {{ message }}
+                </li>
+            {% endfor %}
+        </ul>
+    {% endif %}
             {% block body %}
             {% endblock %}
         </div>
     </div>
-    <footer class="bg-gray-800 text-white py-3 px-6 md:px-12 text-center">
-        <div class="flex flex-col md:flex-row justify-around items-center max-w-6xl mx-auto mb-6">
-            <div class="mb-4 md:mb-0">
-                <h5 class="text-xl font-bold mb-2">FarmERP</h5>
-                <p class="text-gray-400">Smart Solutions for Modern Agriculture</p>
-            </div>
-            <div class="mb-4 md:mb-0">
-                <h5 class="text-lg font-semibold mb-2">Quick Links</h5>
-                <ul class="text-gray-400 space-y-1">
-                    <li><a href="#" class="hover:text-green-400">Features</a></li>
-                    <li><a href="#" class="hover:text-green-400">Pricing</a></li>
-                    <li><a href="#" class="hover:text-green-400">Support</a></li>
-                </ul>
-            </div>
-            <div>
-                <h5 class="text-lg font-semibold mb-2">Connect With Us</h5>
-                <div class="flex justify-center space-x-5">
-                    <a href="#" class="text-gray-400 hover:text-blue-700 transition-colors duration-200" aria-label="Facebook">
-                        <svg class="w-6 h-6 hover:w-10 h-auto" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" role="img" aria-hidden="true">
-                            <circle cx="12" cy="12" r="10" fill="currentColor"/>
-                            <text x="12" y="16" text-anchor="middle" font-size="11" fill="#fff" font-family="Inter, Arial, sans-serif">F</text>
-                        </svg>
-                    </a>
-
-                    <a href="#" class="text-gray-400 hover:text-slate-950 transition-colors duration-200" aria-label="X">
-                        <svg class="w-6 h-6 hover:w-10 h-auto" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" role="img" aria-hidden="true">
-                            <circle cx="12" cy="12" r="10" fill="currentColor"/>
-                            <text x="12" y="16" text-anchor="middle" font-size="11" fill="#fff" font-family="Inter, Arial, sans-serif">X</text>
-                        </svg>
-                    </a>
-
-                    <a href="#" class="text-gray-400 hover:text-fuchsia-600 transition-colors duration-200" aria-label="Instagram">
-                        <svg class="w-6 h-6 hover:w-10 h-auto" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" role="img" aria-hidden="true">
-                            <circle cx="12" cy="12" r="10" fill="currentColor"/>
-                            <text x="12" y="16" text-anchor="middle" font-size="10" fill="#fff" font-family="Inter, Arial, sans-serif">I</text>
-                        </svg>
-                    </a>
-                </div>
-            </div>
-        </div>
-        <p class="text-gray-500 text-sm">&copy; 2025 FarmERP. All rights reserved.</p>
-    </footer>
 </body>
 </html>

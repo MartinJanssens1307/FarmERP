@@ -1,0 +1,43 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tailwind Mixin Test</title>
+    <!-- Assuming Tailwind is loaded via a CDN or local build -->
+    <link rel="stylesheet" href="{% static 'css/styles.css' %}">
+    <script src="https://cdn.jsdelivr.net/npm/htmx.org@2.0.8/dist/htmx.min.js" integrity="sha384-/TgkGk7p307TH7EXJDuUlgG3Ce1UVolAOFopFekQkkXihi5u/6OCvVKyz1W+idaz" crossorigin="anonymous"></script>
+</head>
+<body class="bg-gray-100 p-8">
+    <div id=parent-div class="max-w-4xl mx-auto bg-white p-8 rounded-xl shadow-2xl">
+            <div id="view-details" class="bg-white shadow rounded-lg p-6 mb-8">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+                <h3 class="text-lg font-semibold text-gray-800">Name</h3>
+                <p class="text-gray-600">{{ customer.name }}</p>
+            </div>
+            <div>
+                <h3 class="text-lg font-semibold text-gray-800">Email</h3>
+                <p class="text-gray-600">{{ customer.email }}</p>
+            </div>
+            <div>
+                <h3 class="text-lg font-semibold text-gray-800">Phone</h3>
+                <p class="text-gray-600">{{ customer.phone }}</p>
+            </div>
+            <div>
+                <h3 class="text-lg font-semibold text-gray-800">Address</h3>
+                <p class="text-gray-600">{{ customer.address }}</p>
+            </div>
+            <div>
+                <h3 class="text-lg font-semibold text-gray-800">Role</h3>
+                <p class="text-gray-600">{{ customer.get_role_display }}</p>
+            </div>
+        </div>
+        <button hx-get="{% url 'update' customer.id %}"
+        hx-target="#parent-div"
+        class="mt-6 bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 transition duration-150">Edit test
+        </button>
+    </div>
+    </body>
+</html>

@@ -1,10 +1,4 @@
 {% load static %}
-{% comment %} 
-    PURPOSE: This template confirms the TailwindFormMixin is working. 
-    It manually controls the layout (grid, labels) but the input styling 
-    (the width, border) comes automatically from the Mixin.
-{% endcomment %}
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -24,10 +18,7 @@
                 {% for field in form %}
                     <div class="col-span-1">
                         <label for="{{ field.id_for_label }}" class="form-label">{{ field.label }}</label>
-                        {% comment %} 
-                            !!! The field variable renders with the 'form-input' class automatically 
-                            because of the TailwindFormMixin!
-                        {% endcomment %}
+
                         {{ field }}
 
                         {% if field.help_text %}
@@ -42,5 +33,5 @@
             <button type="submit" class="mt-6 bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 transition duration-150">Submit (Styling Verified)</button>
         </form>
     </div>
-</body>
+    </body>
 </html>
