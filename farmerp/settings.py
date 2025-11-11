@@ -15,6 +15,9 @@ from pathlib import Path
 import dj_database_url
 import os
 
+from django.urls import reverse_lazy
+
+
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -53,6 +56,7 @@ MIDDLEWARE = [
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
+    "django.contrib.auth.middleware.LoginRequiredMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
 ]
@@ -141,3 +145,21 @@ if not DEBUG:
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+
+# URL to redirect to after a user successfully logs in
+LOGIN_REDIRECT_URL = '/' 
+
+# URL to redirect to after a user successfully logs out
+LOGOUT_REDIRECT_URL = '/'
+
+LOGIN_URL = reverse_lazy("login")
+
+# --- Session Inactivity Timeout Configuration ---
+
+# 1. SET THE TIMEOUT DURATION (3 hours = 3 * 60 * 60 = 10800 seconds)
+SESSION_COOKIE_AGE = 10800
+
+# 2. ENABLE SLIDING EXPIRATION (Resets timer on every request)
+SESSION_SAVE_EVERY_REQUEST = True
+
+# --- End Session Configuration ---

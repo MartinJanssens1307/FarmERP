@@ -1,0 +1,32 @@
+<div id="view-details" class="bg-white shadow rounded-lg p-6 mb-8">
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div>
+            <h3 class="text-lg font-semibold text-gray-800">Name</h3>
+            <p class="text-gray-600">{{ customer.name }}</p>
+        </div>
+        <div>
+            <h3 class="text-lg font-semibold text-gray-800">Address</h3>
+            <p class="text-gray-600">{{ customer.address }}</p>
+        </div>
+        <div>
+            <h3 class="text-lg font-semibold text-gray-800">Phone</h3>
+            <p class="text-sky-400 hover:text-blue-800 underline"><a href="tel:{{ customer.phone }}">{{ customer.phone }}</a></p>
+        </div>
+        <div>
+            <h3 class="text-lg font-semibold text-gray-800">Email</h3>
+            <p class="text-sky-500 hover:text-blue-800 underline"><a href="mailto:{{ customer.email }}">{{ customer.email }}</a></p>
+        </div>
+        <div>
+            <h3 class="text-lg font-semibold text-gray-800">Role</h3>
+            <p class="text-gray-600">{{ customer.get_role_display }}</p>
+        </div>
+    </div>
+        <div class="flex items-center justify-center mt-6">
+            <button class="bg-yellow-800 hover:bg-amber-950 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline transition duration-300 mr-2"
+                hx-get="{% url 'customer_update' customer.id %}"
+                hx-target="#view-details"
+                hx-swap="outerHTML">
+                Edit Customer
+            </button>
+        </div>
+</div>

@@ -1,8 +1,13 @@
+from django.contrib.auth.decorators import login_not_required
+from django.contrib import messages
+from django.contrib.auth import login
+from django.contrib.auth.views import LoginView
 from django.shortcuts import redirect, render
-from django.http import HttpResponse
+from django.views.generic import DetailView, ListView, UpdateView
+from django.views.generic.edit import CreateView
 
-from .models import Customer, Transaction
-from django import forms
+from .models import Customer
+from .forms.forms import CreateCustomerForm, LoginForm, RegistrationForm
 
 def index(request):
     return render(request, "ERP/index.html")
@@ -10,52 +15,47 @@ def index(request):
 def construction(request):
     return render(request, "ERP/construction.html")
 
-def createCustomer(request):
-    class CustomerForm(forms.ModelForm):
-        class Meta:
-            model = Customer
-            fields = '__all__'
+class CustomerCreateView(CreateView):
+    model = Customer
+    form_class = CreateCustomerForm
+    def form_valid(self, form):
+        # Assign the current user as the owner
+        form.instance.owner = self.request.user
+        return super().form_valid(form)
 
-    if request.method == "POST":
-        form = CustomerForm(request.POST)
-        if form.is_valid():
-            form.save()
-            return redirect('customers')
-    else:
-        form = CustomerForm()
+class CustomerDetailView(DetailView):
+    model = Customer
 
-    return render(request, "ERP/createCustomer.html", {"form": form})
+class CustomerListView(ListView):
+    model = Customer
 
-def customers(request):
-    customers = Customer.objects.all()
-    return render(request, "ERP/customers.html",{
-        "customers":customers
-        })
-
-def customer(request, id):
-    customer = Customer.objects.get(pk=id)
-    transactions = customer.transactions.all()
-
-    class CustomerForm(forms.ModelForm):
-        class Meta:
-            model = Customer
-            fields = ['name', 'address', 'phone', 'email']
-
-    if request.method == "POST":
-        form = CustomerForm(request.POST, instance=customer)
-        if form.is_valid():
-            form.save()
-            return redirect('customer', id=id)
-    else:
-        form = CustomerForm(instance=customer)
-
-    return render(request, "ERP/customer.html",{
-        "customer": customer,
-        "transactions": transactions,
-        "form": form
-    })
-
-def delete_customer(request, id):
-    customer = Customer.objects.get(pk=id)
+def delete_customer(request, pk):
+    customer = Customer.objects.get(pk=pk)
     customer.delete()
     return redirect('customers')
+
+class CustomerUpdate(UpdateView):
+    model = Customer
+    form_class = CreateCustomerForm
+    template_name = "ERP/customer_update.html"
+    def form_valid(self, form):
+        super().form_valid(form)       
+        # Success: Return the display fragment
+        context = {'customer': self.object}
+        return render(self.request, 'ERP/customer_display.html', context)
+    
+class Login(LoginView):
+    authentication_form = LoginForm
+@login_not_required   
+def register(request):
+    if request.method == 'POST':
+        form = RegistrationForm(request.POST)
+        if form.is_valid():
+            user = form.save()
+            # Optionally log the user in immediately after registration
+            login(request, user)
+            messages.success(request, f"Registration successful. Welcome, {user.username}!")
+            return redirect('index')  # Redirect to your customer list
+    else:
+        form = RegistrationForm()
+    return render(request, 'ERP/register.html', {'form': form})

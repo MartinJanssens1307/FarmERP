@@ -1,0 +1,22 @@
+/* This is the input file read by the Tailwind CLI.
+    The 'content' array in tailwind.config.js must be configured 
+    for these @apply directives to work correctly.
+*/
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Define the custom class that the Python Mixin automatically injects */
+.form-input {
+    @apply w-full border border-gray-300 p-2 rounded-lg shadow-sm transition duration-150;
+}
+
+.form-input:focus {
+    @apply outline-none ring-2 ring-sky-700;
+}
+
+/* Define the custom class used on the <label> tag in the HTML template */
+.form-label {
+    @apply text-lg font-semibold text-gray-800;
+}
