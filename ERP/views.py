@@ -18,6 +18,10 @@ def construction(request):
 class CustomerCreateView(CreateView):
     model = Customer
     form_class = CreateCustomerForm
+    def form_valid(self, form):
+        # Assign the current user as the owner
+        form.instance.owner = self.request.user
+        return super().form_valid(form)
 
 class CustomerDetailView(DetailView):
     model = Customer
