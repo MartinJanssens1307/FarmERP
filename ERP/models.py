@@ -8,7 +8,7 @@ class Customer(models.Model):
     address = models.CharField(max_length=64)
     phone = models.CharField(max_length=30, blank=True)
     email = models.EmailField(max_length=64, blank=True)
-    role = models.CharField(max_length=30, choices=[("client", "Client"), ("supplier", "Supplier")])
+    role = models.CharField(max_length=12, choices=[("client", "Client"), ("supplier", "Supplier")])
     owner = models.ForeignKey(User, on_delete=models.CASCADE)
     def __str__(self):
         return self.name
