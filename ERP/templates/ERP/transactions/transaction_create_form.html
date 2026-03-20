@@ -1,0 +1,91 @@
+{% extends "ERP/layout.html" %}
+
+{% block head %}
+    <title>FarmERP - Create Transaction</title>
+{% endblock %}
+
+{% block body %}
+<div class="container mx-auto px-4 sm:px-8 max-w-5xl my-12">
+    <h2 class="text-2xl font-bold text-gray-800 mb-6">Create New Transaction</h2>
+    <form method="post" id="transaction-form">
+        <div class="mx-auto bg-white p-8 rounded-lg shadow-md my-12">
+            {% csrf_token %}
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                {% for field in form %}
+                <div class="col-span-1">
+                    <label for="{{ field.id_for_label }}" class="form-label">{{ field.label }}</label>
+                    {{ field }}
+                    {% if field.help_text %}
+                    <p class="text-xs text-gray-500 mt-1">{{ field.help_text }}</p>
+                    {% endif %}
+                    {% if field.errors %}
+                    <p class="text-red-500 text-sm mt-1">{{ field.errors }}</p>
+                    {% endif %}
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+            <h2 class="text-2xl font-semibold text-gray-800 mb-4">Line Items</h2>
+            {% if formset.errors %}
+                {{ formset.errors }}
+            {% endif %}
+            <div class="-mx-4 sm:-mx-8 px-4 sm:px-8 py-4 overflow-x-auto mb-6">
+                <div class="inline-block min-w-full shadow rounded-lg overflow-hidden">
+                    <table class="min-w-full leading-normal">
+                        <thead class="bg-gray-800 text-white">
+                            <tr>
+                                <th class="px-5 py-3 border-b-2 border-gray-200 text-left text-xs font-semibold uppercase tracking-wider">Product</th>
+                                <th class="px-5 py-3 border-b-2 border-gray-200 text-left text-xs font-semibold uppercase tracking-wider">Quantity</th>
+                                <th class="px-5 py-3 border-b-2 border-gray-200 text-left text-xs font-semibold uppercase tracking-wider">Price at Sale</th>
+                                <th class="px-5 py-3 border-b-2 border-gray-200 text-left text-xs font-semibold uppercase tracking-wider">Vat Rate</th>
+                                <th class="px-5 py-3 border-b-2 border-gray-200 text-left text-xs font-semibold uppercase tracking-wider">Line Total</th>
+                                <th class="px-5 py-3 border-b-2 border-gray-200 text-center text-xs font-semibold uppercase tracking-wider">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="line-item-tbody" class="bg-white">
+                            {{ formset.management_form }}
+                            {% for form in formset %}
+                                {% include 'ERP/transactions/_line_item_row_copy.html' %}                      
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        <div class="flex justify-between items-center mb-6">
+            <button type="button" 
+                    hx-get="{% url 'get_line_item' %}"
+                    hx-target="#line-item-tbody"
+                    hx-swap="beforeend"
+                    hx-on="htmx:afterSettle: addNewLine()"
+                    class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline transition duration-300">
+                + Add Product Line
+            </button>
+            <div id="total-update-container" class="text-lg font-semibold text-gray-800">
+                Total: €<span id="transaction-total-display">{{ transaction.total_amount|default:"0.00" }}</span>
+            </div>
+        </div>
+        <div class="flex items-center justify-center">
+            <button type="submit" class="bg-sky-500 hover:bg-sky-700 text-white font-semibold py-2 px-4 rounded">
+                Create Transaction
+            </button>
+            <a href="{% url 'transaction_list' %}" class="bg-yellow-500 hover:bg-yellow-700 text-white font-semibold py-2 px-4 rounded ml-2">Cancel</a>
+        </div>
+    </form>
+</div>
+<script>
+document.addEventListener('htmx:afterSettle', (evt) => {
+    if (evt.detail.target.id === 'line-item-tbody') {
+        const rows = document.querySelectorAll('.item-row');
+        const newIndex = rows.length - 1;
+        const lastRow = rows[newIndex];
+
+        // On remplace TOUT le HTML de la ligne d'un coup (ID, Name, Onclick, etc.)
+        lastRow.outerHTML = lastRow.outerHTML.replace(/__prefix__/g, newIndex);
+
+        // Mise à jour du compteur Django
+        const total = document.querySelector('input[name$="-TOTAL_FORMS"]');
+        if (total) total.value = rows.length;
+    }
+});
+</script>
+{% endblock %}

@@ -1,0 +1,6 @@
+<span id="transaction-total-display" hx-swap-oob="true">{{ overall_total }}</span>
+
+
+{% for prefix, line_total in updated_totals_data.items %}
+    <td id="line-total-{{ prefix }}" hx-swap-oob="true">{{ line_total }}</td>
+{% endfor %}

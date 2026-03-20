@@ -1,0 +1,98 @@
+{% extends "ERP/layout.html" %}
+{% block head %}
+<title>FarmERP - Transaction</title>
+{% endblock %}
+
+{% block body %}
+<div class="container mx-auto px-4 sm:px-8 max-w-5xl my-12">
+    <div class="flex justify-between items-center mb-6">
+        <h2 class="text-2xl font-semibold leading-tight text-gray-800">Transaction General</h2>
+        <a href="{% url 'transaction_list' %}" class="bg-gray-600 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline transition duration-300">
+            Back to Transactions
+        </a>
+    </div>
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 bg-white shadow rounded-lg p-6 mb-8">
+        <div>
+            <h3 class="text-lg font-semibold text-gray-800">Customer</h3>
+            <p class="text-gray-600"><a href="{% url 'customer' transaction.customer.id %}" class="text-blue-600 hover:text-blue-800 underline">{{ transaction.customer }}</a></p>
+        </div>
+        <div>
+            <h3 class="text-lg font-semibold text-gray-800">Type</h3>
+            <p class="text-gray-600">{{ transaction.get_type_display }}</p>
+        </div>
+        <div>
+            <h3 class="text-lg font-semibold text-gray-800">Status</h3>
+            <p class="text-gray-600">{{ transaction.get_status_display }}</p>
+        </div>
+        <div>
+            <h3 class="text-lg font-semibold text-gray-800">Creation Date</h3>
+            <p class="text-gray-600">{{ transaction.creation_date }}</p>
+        </div>
+    </div>
+    <h2 class="text-2xl font-semibold text-gray-800 mb-4">Line Items</h2>
+    {% if formset.errors %}
+        {{ formset.errors }}
+    {% endif %}
+    <div class="-mx-4 sm:-mx-8 px-4 sm:px-8 py-4 overflow-x-auto mb-6">
+        <div class="inline-block min-w-full shadow rounded-lg overflow-hidden">
+            <table class="min-w-full leading-normal">
+                <thead class="bg-gray-800 text-white">
+                    <tr>
+                        <th class="px-5 py-3 border-b-2 border-gray-200 text-left text-xs font-semibold uppercase tracking-wider">Product</th>
+                        <th class="px-5 py-3 border-b-2 border-gray-200 text-left text-xs font-semibold uppercase tracking-wider">Quantity</th>
+                        <th class="px-5 py-3 border-b-2 border-gray-200 text-left text-xs font-semibold uppercase tracking-wider">Price at Sale</th>
+                        <th class="px-5 py-3 border-b-2 border-gray-200 text-left text-xs font-semibold uppercase tracking-wider">Net Total</th>
+                        <th class="px-5 py-3 border-b-2 border-gray-200 text-left text-xs font-semibold uppercase tracking-wider">Vat Rate</th>
+                        <th class="px-5 py-3 border-b-2 border-gray-200 text-left text-xs font-semibold uppercase tracking-wider">Gross Total</th>
+                    </tr>
+                </thead>
+                <tbody id="line-item-tbody" class="bg-white">
+            {% for item in line_items %}
+            <tr>
+                <td class="px-5 py-5 border-b border-gray-200 text-sm">
+                    <p class="text-gray-900 whitespace-no-wrap">{{ item.product }}</p>
+                </td>
+                <td class="px-5 py-5 border-b border-gray-200 text-sm">
+                    <p class="text-gray-900 whitespace-no-wrap">{{ item.quantity }} {{item.product.unit_measure}}</p>
+                </td>
+                <td class="px-5 py-5 border-b border-gray-200 text-sm">
+                    <p class="text-gray-900 whitespace-no-wrap">€{{ item.unit_price_net }}</p>
+                </td>
+                    <td class="px-5 py-5 border-b border-gray-200 text-sm">
+                    <p class="text-gray-900 whitespace-no-wrap">€{{ item.total_net }}</p>
+                </td>                       
+                <td class="px-5 py-5 border-b border-gray-200 text-sm">
+                    <p class="text-gray-900 whitespace-no-wrap">{{ item.vat_rate_percentage }}%</p>
+                </td>
+
+                <td class="px-5 py-5 border-b border-gray-200 text-sm">
+                    <p class="text-gray-900 whitespace-no-wrap">€{{ item.total_gross }}</p>
+                </td>                     
+            </tr>
+            {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    <div class="bg-white shadow rounded-lg p-6 flex justify-between items-center mb-6">
+        <div class="text-md text-gray-800">
+            <div>
+                Total Net: €{{ transaction.total_net }}
+            </div>
+        </div>
+        <div class="text-md text-gray-800">
+            <div>
+                Total VAT: €{{ transaction.total_vat }}
+            </div>
+        </div>
+        <div class="text-lg font-bold text-gray-800">
+            <div>
+                Total: €{{ transaction.total_gross }}
+            </div>
+        </div>
+    </div>
+    <a href="{% url 'transaction_print' transaction.id %}" target="_blank" class="print:hidden bg-green-800 hover:bg-green-900 text-white py-2 px-4 rounded">
+        Generate PDF
+    </a>
+</div>
+{% endblock %}

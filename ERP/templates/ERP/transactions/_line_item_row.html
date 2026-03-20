@@ -1,0 +1,52 @@
+<tr id="line-item-{{ form.prefix }}" class="border-b border-gray-200 hover:bg-gray-50">
+    <td class="px-5 py-5 text-sm">
+        {{ form.product }}
+    </td>
+    <td class="px-5 py-5 text-sm">
+        {{ form.quantity }}
+    </td>
+    <td class="px-5 py-5 text-sm">
+        {{ form.unit_price_at_sale }}
+    </td>
+    <td id="line-total-{{ form.prefix }}" class="px-5 py-5 text-sm font-semibold text-gray-900">
+        €{{ form.instance.line_total|default:"0.00" }}
+    </td>
+    <td class="px-5 py-5 text-sm text-center">
+        {% if form.instance.pk %}
+            <button type="button" 
+                    onclick="document.getElementById('id_{{ form.prefix }}-DELETE').checked = true; document.getElementById('line-item-{{ form.prefix }}').style.display='none';" 
+                    class="text-red-600 hover:text-red-800 font-semibold">
+                Remove
+            </button>
+        {% else %}
+            <button type="button" 
+                    onclick="document.getElementById('line-item-{{ form.prefix }}').remove();" 
+                    class="text-red-600 hover:text-red-800 font-semibold">
+                Remove
+            </button>
+        {% endif %}
+    </td>
+</tr>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const quantityInput = document.getElementById('id_{{ form.prefix }}-quantity');
+        const priceInput = document.getElementById('id_{{ form.prefix }}-unit_price_at_sale');
+
+        if (quantityInput) {
+            quantityInput.setAttribute('hx-post', "{% url 'calculate_totals' pk=transaction.pk %}");
+            quantityInput.setAttribute('hx-trigger', "keyup delay:500ms changed");
+            quantityInput.setAttribute('hx-target', "#total-update-container");
+            quantityInput.setAttribute('hx-swap', "innerHTML");
+            quantityInput.setAttribute('hx-include', "#transaction-form");
+        }
+
+        if (priceInput) {
+            priceInput.setAttribute('hx-post', "{% url 'calculate_totals' pk=transaction.pk %}");
+            priceInput.setAttribute('hx-trigger', "keyup delay:500ms changed");
+            priceInput.setAttribute('hx-target', "#total-update-container");
+            priceInput.setAttribute('hx-swap', "innerHTML");
+            priceInput.setAttribute('hx-include', "#transaction-form");
+        }
+    });
+</script>

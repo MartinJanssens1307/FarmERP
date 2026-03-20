@@ -1,0 +1,115 @@
+{% load static %}
+
+<link rel="stylesheet" href="{% static 'css/styles.css' %}">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+{% block head %}
+<title>Print Invoice - {{ transaction.id }}</title>
+<style>
+    @media print {
+        /* Removes browser headers/footers */
+        @page { margin: 0; size: auto; }
+        body { margin: 1.5cm; -webkit-print-color-adjust: exact; }
+        .no-print { display: none !important; }
+    }
+</style>
+{% endblock %}
+
+{% block body %}
+<div class="max-w-4xl mx-auto my-4 bg-white p-8">
+    
+    <div class="no-print flex justify-between mb-8 border-b pb-4">
+        <span class="text-gray-500 italic text-sm">Preview Mode: Use the button to save as PDF</span>
+        <button onclick="window.print()" class="bg-green-800 hover:bg-green-900 text-white py-2 px-6 rounded shadow-lg transition">
+            Confirm & Print
+        </button>
+    </div>
+
+    <div class="flex justify-between items-start mb-10">
+        <div>
+            <h1 class="text-4xl font-bold text-gray-800 uppercase tracking-tight">Invoice</h1>
+            <p class="text-gray-600 mt-1">#TRN-{{ transaction.id|stringformat:"05d" }}</p>
+        </div>
+        <div class="text-right text-gray-800">
+            <h2 class="text-xl font-bold">Japhagri</h2>
+            <p>Rue de Névremont, 28</p>
+            <p>5070 Fosses-La-Ville, Belgium</p>
+            <p class="text-sm">VAT: BE466.483.985
+            </p>
+        </div>
+    </div>
+
+    <div class="grid grid-cols-2 gap-12 mb-10">
+        <div class="border-l-4 border-gray-800 pl-4">
+            <h3 class="text-xs font-bold uppercase text-gray-500 mb-1">Bill To</h3>
+            <p class="text-lg font-semibold text-gray-900">{{ transaction.customer.first_name }} {{ transaction.customer.name }}</p>
+            <p class="text-gray-600">{{ transaction.customer.addresses.street|default:"No address provided" }}</p>
+            <p class="text-gray-600">{{ transaction.customer.email }}</p>
+        </div>
+        <div class="text-right">
+            <h3 class="text-xs font-bold uppercase text-gray-500 mb-1">Transaction Info</h3>
+            <p class="text-gray-800"><span class="font-medium">Date:</span> {{ transaction.creation_date|date:"d/m/Y" }}</p>
+        </div>
+    </div>
+
+    <div class="mb-10">
+        <table class="min-w-full leading-normal">
+            <thead>
+                <tr class="bg-gray-800 text-white">
+                    <th class="px-4 py-3 text-left text-xs font-bold uppercase">Product</th>
+                    <th class="px-4 py-3 text-center text-xs font-bold uppercase">Qty</th>
+                    <th class="px-4 py-3 text-right text-xs font-bold uppercase">Unit Price</th>
+                    <th class="px-4 py-3 text-right text-xs font-bold uppercase">VAT</th>
+                    <th class="px-4 py-3 text-right text-xs font-bold uppercase">Total Gross</th>
+                </tr>
+            </thead>
+            <tbody class="text-gray-800">
+                {% for item in line_items %}
+                <tr class="border-b border-gray-200">
+                    <td class="px-4 py-4 text-sm font-medium">{{ item.product }}</td>
+                    <td class="px-4 py-4 text-sm text-center">{{ item.quantity }}</td>
+                    <td class="px-4 py-4 text-sm text-right">€{{ item.unit_price_net }}</td>
+                    <td class="px-4 py-4 text-sm text-right">{{ item.vat_rate_percentage }}%</td>
+                    <td class="px-4 py-4 text-sm text-right font-semibold">€{{ item.total_gross }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <div class="flex justify-end">
+        <div class="w-64 space-y-2">
+            <div class="flex justify-between text-gray-600 text-sm">
+                <span>Total Net:</span>
+                <span>€{{ transaction.total_net }}</span>
+            </div>
+            <div class="flex justify-between text-gray-600 text-sm">
+                <span>Total VAT:</span>
+                <span>€{{ transaction.total_vat }}</span>
+            </div>
+            <div class="flex justify-between border-t border-gray-800 pt-2 text-xl font-bold text-gray-900">
+                <span>Grand Total:</span>
+                <span>€{{ transaction.total_gross }}</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="mt-24 pt-8 border-t border-gray-200 text-center text-xs text-gray-400">
+        <p class="mb-1">Payment via Bank Transfer to: <strong>BE76 0000 1111 2222</strong></p>
+        <p>Please use <strong>TRN-{{ transaction.id }}</strong> as payment reference.</p>
+        <p class="mt-4 italic">Thank you for choosing FarmERP. We appreciate your partnership!</p>
+    </div>
+</div>
+
+<script>
+    window.onload = function() {
+        // Trigger print immediately on load
+        window.print();
+        
+        // Optional: Close tab after printing (or canceling)
+        window.onafterprint = function() {
+            window.close();
+        }
+    }
+</script>
+{% endblock %}

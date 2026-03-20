@@ -4,8 +4,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="icon" href="{% static 'ERP/Logo.png' %}" type="image/png">
-    <link rel="shortcut icon" href="{% static 'ERP/Logo.png' %}" type="image/png">
+    <link rel="icon" href="{% static 'Logo.png' %}" type="image/png">
+    <link rel="shortcut icon" href="{% static 'Logo.png' %}" type="image/png">
     {% block head %}
     {% endblock %}
     <link rel="stylesheet" href="{% static 'css/styles.css' %}">
@@ -14,55 +14,70 @@
     <style>
         body {
             font-family: 'Inter', sans-serif;
-            background-color: #4CAF50; /* Light gray background */
-        }
-        .hero-section {
-            background: linear-gradient(to right, #4CAF50, #8BC34A); /* Green gradient */
         }
         /* Define the class that the Python Mixin applies */
     </style>
 </head>
 <body class="flex flex-col min-h-screen">
-    <div class="flex flex-col flex-1">
-        <div class="bg-gray-100 text-gray-800 flex-1">
-            <header class="bg-white shadow-md py-4 px-6 md:px-12 flex justify-between items-center rounded-b-lg">
-                <div class="flex items-center">
-                    <a href="{% url 'index' %}">
-                    <img class="h-12 w-auto shrink-0 mr-3" src="{% static 'Logo.png' %}" alt="FarmERP Logo">
-                    </a>
-                    <h1 class="text-2xl font-bold"><span class="text-green-700">Farm</span><span class="text-yellow-500">ERP</span></h1>
-                </div>
-                <nav class="hidden md:flex space-x-6">
-                    <a href="{% url 'index' %}" class="text-gray-700 hover:text-green-600 font-medium">Home</a>
-                    <a href="#" class="text-gray-700 hover:text-green-600 font-medium">Features</a>
-                    <a href="#" class="text-gray-700 hover:text-green-600 font-medium">About Us</a>
-                    <a href="#" class="text-gray-700 hover:text-green-600 font-medium">Contact</a>
-                    {% if user.is_authenticated %}
-                    <a href="/admin" class="text-gray-700 hover:text-yellow-500 font-medium">Admin</a>
-                    <form method="post" action="{% url 'logout' %}" style="display: inline;">
-                        {% csrf_token %}
-                        <button type="submit" class="bg-red-700 text-white px-4 py-2 rounded-lg hover:bg-red-800 transition duration-300">
-                            Logout
-                        </button>
-                    </form>
-                    {% else %}
-                    <a href="{% url 'login' %}" class="bg-sky-500 text-white px-4 py-2 rounded-lg hover:bg-sky-700 transition duration-300">Login</a>
-                    <a href="{% url 'register' %}" class="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition duration-300">Register</a>
-                    {% endif %}
-                </nav>
-            </header>
-    {% if messages %}
-        <ul class="messages">
-            {% for message in messages %}
-                <li {% if message.tags %} class="{{ message.tags }} alert-{{ message.tags }}"{% endif %}>
-                    {{ message }}
-                </li>
-            {% endfor %}
-        </ul>
-    {% endif %}
+    <header class="bg-white shadow-md py-4 px-6 md:px-12 relative flex justify-between items-center rounded-b-lg">
+        <div class="flex items-center">
+            <a href="{% url 'index' %}">
+                <img class="h-12 w-auto shrink-0 mr-3" src="{% static 'Logo.png' %}" alt="FarmERP Logo">
+            </a>
+            <h1 class="text-2xl font-bold"><span class="text-green-700">Farm</span><span class="text-yellow-500">ERP</span></h1>
+        </div>
+        <button id="mobile-menu-toggle" class="text-gray-700 p-2 md:hidden">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path></svg>
+        </button>
+        <nav class="hidden md:flex space-x-4 items-center">
+            <a href="{% url 'index' %}" class="text-gray-700 hover:text-green-600 font-medium">Home</a>
+            <a href="#" class="text-gray-700 hover:text-green-600 font-medium">Contact</a>
+            {% if user.is_authenticated %}
+            <a href="/admin" class="text-gray-700 hover:text-yellow-500 font-medium">Admin</a>
+            <form method="post" action="{% url 'logout' %}" style="display: inline;">
+                {% csrf_token %}
+                <button type="submit" class="bg-red-700 text-white px-4 py-2 rounded-lg hover:bg-red-800 transition duration-300">Logout</button>
+            </form>
+            {% else %}
+            <a href="{% url 'login' %}" class="bg-sky-500 text-white px-4 py-2 rounded-lg hover:bg-sky-700 transition duration-300">Login</a>
+            <a href="{% url 'register' %}" class="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition duration-300">Register</a>
+            {% endif %}
+        </nav>
+        <nav id="mobile-menu" class="hidden absolute top-full left-0 w-full bg-white shadow-lg p-4 z-50 flex-col md:hidden">
+            <a href="{% url 'index' %}" class="text-gray-700 hover:text-green-600 font-medium w-full block">Home</a>
+            <a href="#" class="text-gray-700 hover:text-green-600 font-medium w-full block">Contact</a>
+            {% if user.is_authenticated %}
+            <a href="/admin" class="text-gray-700 hover:text-yellow-500 font-medium w-full block">Admin</a>
+            <form method="post" action="{% url 'logout' %}">
+                {% csrf_token %}
+                <button class="text-gray-700 hover:text-red-600 font-medium">Logout</button>
+            </form>
+            {% else %}
+            <a href="{% url 'login' %}" class="text-gray-700 hover:text-green-500 font-medium w-full block">Login</a>
+            <a href="{% url 'register' %}" class="text-gray-700 hover:text-green-500 font-medium w-full block">Register</a>
+            {% endif %}
+        </nav>
+    </header>
+    <div class="flex flex-1 min-h-0">
+        <!-- Main content area: takes remaining space -->
+        <main class="flex-1 overflow-auto bg-gray-100 p-6">
             {% block body %}
             {% endblock %}
-        </div>
+        </main>
     </div>
+        {% block footer %}
+        {% endblock %}
 </body>
+<script>
+    // Get the two elements we need to interact with
+    const toggleButton = document.getElementById('mobile-menu-toggle');
+    const mobileMenu = document.getElementById('mobile-menu');
+
+    // Add an event listener to the button
+    toggleButton.addEventListener('click', function() {
+        // Core logic: just toggle the 'hidden' class.
+        // Tailwind handles all the positioning and stacking applied in the HTML.
+        mobileMenu.classList.toggle('hidden');
+    });
+</script>
 </html>

@@ -1,0 +1,32 @@
+<tr id="line-item-{{ form.prefix }}" class="item-row border-b border-gray-200 hover:bg-gray-50">
+    <td class="px-5 py-5 text-sm">
+        {{ form.product }}
+    </td>
+    <td class="px-5 py-5 text-sm">
+        {{ form.quantity }}
+    </td>
+    <td class="px-5 py-5 text-sm">
+        {{ form.unit_price_net }}
+    </td>
+    <td class="px-5 py-5 text-sm">
+        {{ form.vat_rate_percentage }}
+    </td>
+    <td id="line-total-{{ form.prefix }}" class="px-5 py-5 text-sm font-semibold text-gray-900">
+        €{{ form.instance.total_gross|default:"0.00" }}
+    </td>
+    <td class="px-5 py-5 text-sm text-center">
+        {% if form.instance.pk %}
+            <button type="button" 
+                    onclick="document.getElementById('id_{{ form.prefix }}-DELETE').checked = true; document.getElementById('line-item-{{ form.prefix }}').style.display='none';" 
+                    class="text-red-600 hover:text-red-800 font-semibold">
+                Remove
+            </button>
+        {% else %}
+            <button type="button" 
+                    onclick="document.getElementById('line-item-{{ form.prefix }}').remove();" 
+                    class="text-red-600 hover:text-red-800 font-semibold">
+                Remove
+            </button>
+        {% endif %}
+    </td>
+</tr>
