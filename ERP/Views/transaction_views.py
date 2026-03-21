@@ -49,10 +49,11 @@ def transactions_partial(request):
     return render(request, 'ERP/transactions/transaction_list.html#transaction_list', {'transaction_list':transactions})
 
 def transaction_print(request, pk):
-    transaction=get_object_or_404(Transaction.objects.select_related('customer').prefetch_related('line_items'), pk=pk)
+    transaction=get_object_or_404(Transaction.objects.select_related('customer').prefetch_related('line_items', 'customer__addresses'), pk=pk)
     context={
         'transaction': transaction,
         'customer': transaction.customer,
         'line_items': transaction.line_items.all(),
+        'addresses':transaction.customer.addresses
     }
     return render(request, 'ERP/transactions/transaction_print.html', context)
