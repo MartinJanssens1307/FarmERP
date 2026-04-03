@@ -35,7 +35,11 @@ if DEBUG:
     ALLOWED_HOSTS = ['localhost', '127.0.0.1', '[::1]']
 else:
     # Get this from your Render environment variable
-    ALLOWED_HOSTS = [os.environ.get('ALLOWED_HOSTS')]
+    ALLOWED_HOSTS = [
+    os.environ.get('ALLOWED_HOSTS'),
+    'agricore.be', 
+    'www.agricore.be',
+    ]
 
 # Application definition
 
