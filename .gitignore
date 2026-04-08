@@ -1,1 +1,12 @@
+# Python bits
+__pycache__/
+*.pyc
 db.sqlite3
+
+# JavaScript / Tailwind bits (This is the important part!)
+node_modules/
+.npm/
+dist/
+
+# Environment variables
+.env
