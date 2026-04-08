@@ -43,7 +43,7 @@ class Customer(BusinessPartner):
 class Product(models.Model):
     name = models.CharField(max_length=64)
     description = models.TextField(max_length=250)
-    unit_measure = models.CharField(max_length=3, choices=[("kg", "Kg"), ("l", "L"), ("t", "Ton"), ("u", "Unit"), ("h", "Hour"),("a", "Are")])
+    unit_measure = models.CharField(max_length=3, choices=[("kg", "Kg"), ("l", "L"), ("t", "Ton"), ("u", "Unit"), ("h", "Hour"),("a", "Are"),("ha", "Hectare")])
     unit_price = models.DecimalField(max_digits=10, decimal_places=2)
     type = models.CharField(max_length=3, choices=[("o", "Object"), ("s", "Service")], default='o')
     owner = models.ForeignKey(User, on_delete=models.CASCADE)
