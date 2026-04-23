@@ -88,7 +88,7 @@
                     class="px-6 py-3 text-gray-700 hover:text-cyan-600">
                 Addresses
             </button>
-            <button hx-get="{% url 'transaction_list_partial' %}" 
+            <button hx-get="{% url 'transaction_list_partial' customer.id %}" 
                     hx-target="#customer-details-container"
                     class="px-6 py-3 text-gray-700 hover:text-cyan-600">
                 Transactions

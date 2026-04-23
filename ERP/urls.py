@@ -33,8 +33,6 @@ urlpatterns = [
 
 # --- Transaction paths ---
     path('transactions/', views.TransactionListView.as_view(), name='transaction_list'),
-    path('transactions/create/', views.TransactionCreateView.as_view(), name='transaction_create'),
-    path('transaction/<int:pk>/edit/', views.TransactionUpdateView.as_view(), name='transaction_update'),
     path('transaction/<int:pk>/add-line/', views.add_line_item, name='add_line_item_htmx'),
     path('transactions/<int:pk>/calculate-totals/', views.calculate_totals, name='calculate_totals'),
     path('transactions/<int:pk>/delete', transaction_views.transaction_delete, name='transaction_delete'),
@@ -43,6 +41,6 @@ urlpatterns = [
     path('transaction/create', transaction_views.transaction_create, name='transaction_creation'),
     path('transaction/add-line/', transaction_views.get_line_item, name='get_line_item'),
     path('transaction/<int:pk>', transaction_views.transaction_details, name='transaction_details'),
-    path('transaction_partial', transaction_views.transactions_partial, name='transaction_list_partial'),
+    path('transaction_partial/<int:customer_id>', transaction_views.transactions_partial, name='transaction_list_partial'),
     path('transaction_print/<int:pk>', transaction_views.transaction_print, name='transaction_print'),
 ]

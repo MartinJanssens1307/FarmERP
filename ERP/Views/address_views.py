@@ -6,8 +6,8 @@ from ERP.models import Address
 from ERP.forms.forms import CreateAddressForm, Customer
 
 def address_list(request, customer_id):
-    addresses = Address.objects.filter(partner_id=customer_id)
-    customer = get_object_or_404(Customer, pk=customer_id)
+    customer = get_object_or_404(Customer, pk=customer_id, owner=request.user)
+    addresses = customer.addresses.all().order_by('-is_billing_default', '-is_shipping_default')
     return render(request, "ERP/address/address_detail.html", {"addresses": addresses, "customer": customer})
 
 def address_create(request, pk):
@@ -18,7 +18,9 @@ def address_create(request, pk):
             address = form.save(commit=False)
             address.partner=customer
             address.save()
-            return render(request, 'ERP/address/address_detail.html#address_line', {'address': address,'customer':customer})
+            response = render(request, 'ERP/address/address_detail.html#address_row_form', {'address': address,'customer':customer})
+            response["HX-Trigger"] = "addressListChanged"
+            return response
 
     form = CreateAddressForm()
     context = {"form": form, 'customer': customer}
@@ -30,7 +32,9 @@ def address_edit(request, pk):
         form = CreateAddressForm(request.POST, instance=address)
         if form.is_valid():
             form.save()
-            return render(request, 'ERP/address/address_detail.html#address_line', {'address': address, 'customer': address.partner})
+            response = render(request, 'ERP/address/address_detail.html#address_line', {'address': address, 'customer': address.partner})
+            response["HX-Trigger"] = "addressListChanged"
+            return response
     else:
         form = CreateAddressForm(instance=address)
     

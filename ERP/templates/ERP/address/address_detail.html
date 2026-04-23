@@ -1,3 +1,6 @@
+<div
+hx-get="{% url 'addresses' customer.id %}" 
+hx-trigger="addressListChanged from:body">
 {% partialdef addresses_details inline %}
     <div class="-mx-4 sm:-mx-8 px-4 sm:px-8 py-4 overflow-x-auto">
         <div class="inline-block min-w-full shadow rounded-lg overflow-hidden">
@@ -23,8 +26,14 @@
                             Billing
                         </th> 
                         <th class="px-5 py-3 border-b-2 border-gray-200 text-left text-xs font-semibold uppercase tracking-wider">
+                            Default
+                        </th>
+                        <th class="px-5 py-3 border-b-2 border-gray-200 text-left text-xs font-semibold uppercase tracking-wider">
                             Shipping
-                        </th>                                               
+                        </th> 
+                        <th class="px-5 py-3 border-b-2 border-gray-200 text-left text-xs font-semibold uppercase tracking-wider">
+                            Default
+                        </th>                                                
                         <th class="px-5 py-3 border-b-2 border-gray-200 text-center text-xs font-semibold uppercase tracking-wider">
                             Actions
                         </th>
@@ -49,11 +58,17 @@
                         <td class="px-5 py-5 border-b border-gray-200 text-sm">
                             <p class="text-gray-900 whitespace-no-wrap">{{ address.get_country_display }}</p>
                         </td>
-                        <td class="px-5 py-5 border-b border-gray-200 text-sm">
-                            <p class="text-gray-900 whitespace-no-wrap">{{ address.is_billing }}</p>
+                        <td class="px-5 py-5 border-b border-gray-200 text-sm text-center">
+                            <input type="checkbox" disabled {% if address.is_billing %}checked{% endif %} class="w-4 h-4">
                         </td>
-                        <td class="px-5 py-5 border-b border-gray-200 text-sm">
-                            <p class="text-gray-900 whitespace-no-wrap">{{ address.is_shipping }}</p>
+                        <td class="px-5 py-5 border-b border-gray-200 text-sm text-center">
+                            <input type="checkbox" disabled {% if address.is_billing_default %}checked{% endif %} class="w-4 h-4">
+                        </td>
+                        <td class="px-5 py-5 border-b border-gray-200 text-sm text-center">
+                            <input type="checkbox" disabled {% if address.is_shipping %}checked{% endif %} class="w-4 h-4">
+                        </td>
+                       <td class="px-5 py-5 border-b border-gray-200 text-sm text-center">
+                            <input type="checkbox" disabled {% if address.is_shipping_default %}checked{% endif %} class="w-4 h-4">
                         </td>
                         <td class="px-5 py-5 border-b border-gray-200 text-sm text-center">
                             <button hx-get="{% url 'edit_address' address.id %}"
@@ -93,7 +108,7 @@
         New Address
         </button>
     {% partialdef address_row_form %}
-    <tr class="bg-blue-50">
+    <tr class="bg-blue-50 text-center">
         <td class="hidden"><input type="hidden" name="csrfmiddlewaretoken" value="{{ csrf_token }}"></td>
         <td>{{ form.street }}</td>
         <td>{{ form.number }}</td>
@@ -101,7 +116,9 @@
         <td>{{ form.city }}</td>
         <td>{{ form.country }}</td>
         <td>{{ form.is_billing }}</td>
+        <td>{{ form.is_billing_default }}</td>
         <td>{{ form.is_shipping }}</td>
+        <td>{{ form.is_shipping_default }}</td>
         <td>
             <button type="button" 
                     hx-post="{% if address %}{% url 'edit_address' address.id %}{% else %}{% url 'create_address' customer.id %}{% endif %}" 
@@ -131,3 +148,4 @@
         </td>
     </tr>
     {% endpartialdef %}
+</div>

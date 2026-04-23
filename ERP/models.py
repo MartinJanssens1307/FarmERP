@@ -28,7 +28,42 @@ class Address(models.Model):
     partner = models.ForeignKey(BusinessPartner, on_delete=models.CASCADE, related_name='addresses')
     is_shipping = models.BooleanField(default=True)
     is_billing = models.BooleanField(default=True)
-    
+    is_shipping_default = models.BooleanField(default=False)
+    is_billing_default = models.BooleanField(default=False)
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=['partner'],
+                condition=models.Q(is_billing_default=True),
+                name='unique_default_billing_per_partner'
+            ),
+            models.UniqueConstraint(
+                fields=['partner'],
+                condition=models.Q(is_shipping_default=True),
+                name='unique_default_shipping_per_partner'
+            )
+        ]
+
+    def save(self, *args, **kwargs):
+        from django.db import transaction
+        with transaction.atomic():
+            if self.is_billing_default:
+                # transaction.atomic() ensures that if the 'uncheck' fails, 
+                # the 'save' also fails. Total data safety.
+                Address.objects.filter(
+                    partner=self.partner, 
+                    is_billing_default=True
+                    ).exclude(pk=self.pk).update(is_billing_default=False)
+                self.is_billing = True
+            if self.is_shipping_default:
+                Address.objects.filter(
+                    partner=self.partner, 
+                    is_shipping_default=True 
+                ).exclude(pk=self.pk).update(is_shipping_default=False)
+                self.is_shipping = True
+        super().save(*args, **kwargs)
+
     def __str__(self):
         return f"{self.street}, {self.number} {self.city}"
 
@@ -39,6 +74,14 @@ class Customer(BusinessPartner):
     
     def get_absolute_url(self):
         return reverse("customer", kwargs={"pk":self.pk})
+    
+    def get_billing_address(self):
+        return (self.addresses.filter(is_billing_default=True).first() or 
+                self.addresses.filter(is_billing=True).first())
+
+    def get_shipping_address(self):
+        return (self.addresses.filter(is_shipping_default=True).first() or 
+                self.addresses.filter(is_shipping=True).first())
 
 class Product(models.Model):
     name = models.CharField(max_length=64)

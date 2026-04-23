@@ -44,8 +44,8 @@ def get_line_item(request):
     form=formset.empty_form
     return render(request, 'ERP/transactions/_line_item_row_copy.html', {'form':form})
 
-def transactions_partial(request):
-    transactions=Transaction.objects.filter(owner=request.user)
+def transactions_partial(request, customer_id):
+    transactions=Transaction.objects.filter(customer=customer_id, owner=request.user)
     return render(request, 'ERP/transactions/transaction_list.html#transaction_list', {'transaction_list':transactions})
 
 def transaction_print(request, pk):
@@ -54,6 +54,6 @@ def transaction_print(request, pk):
         'transaction': transaction,
         'customer': transaction.customer,
         'line_items': transaction.line_items.all(),
-        'addresses':transaction.customer.addresses
+        'address':transaction.customer.get_billing_address()
     }
     return render(request, 'ERP/transactions/transaction_print.html', context)

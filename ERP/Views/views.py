@@ -48,76 +48,7 @@ class TransactionListView(ListView):
         # **Security Filter**
         # Only show transactions owned by the current logged-in user
         return Transaction.objects.filter(owner=self.request.user).order_by('-creation_date')
-
-class TransactionCreateView(CreateView):
-    model = Transaction
-    # Fields for the main header (customer, type, status)
-    fields = ['customer', 'type', 'status'] 
-    template_name = 'ERP/transactions/transaction_create_form.html'
-    success_url = reverse_lazy('transaction_list') # Assuming you will create this list view later
-
-    def get_form(self, form_class=None):
-        form = super().get_form(form_class)
-        # Security: Limit the customer choices to those owned by the user
-        # Filter by Customer instances (not BusinessPartner) owned by the user
-        from ERP.models import Customer
-        form.fields['customer'].queryset = Customer.objects.filter(owner=self.request.user)
-        return form
-
-    def form_valid(self, form):
-        # Security: Automatically set the owner upon creation
-        form.instance.owner = self.request.user
-        return super().form_valid(form)
-
-class TransactionUpdateView(UpdateView):
-    model = Transaction
-    # Fields for the main Transaction header (excluding total_amount, which is calculated)
-    fields = ['customer', 'type', 'status'] 
-    template_name = 'ERP/transactions/transaction_form.html'
-    
-    # 1. Ensure security filter is applied
-    def get_queryset(self):
-        return Transaction.objects.filter(owner=self.request.user)
-
-    # 2. Add the formset to the context for display
-    def get_context_data(self, **kwargs):
-        data = super().get_context_data(**kwargs)
-        if self.request.POST:
-            # Re-bind the formset if validation failed
-            data['line_item_formset'] = TransactionLineItemFormSet(
-                self.request.POST, 
-                instance=self.object,
-                queryset=self.object.line_items.all()
-            )
-        else:
-            # Initial load: pass the empty formset instance
-            data['line_item_formset'] = TransactionLineItemFormSet(instance=self.object)
-        
-        # Pass the Products queryset, filtered by owner, to the Formset's Product choice field
-        # Note: This is an advanced step, often handled by customizing the Formset initialization
-        # For simplicity, ensure the queryset in forms.py is correct or let Django handle it if Product doesn't have an owner FK
-        return data
-
-    # 3. Handle saving the main form and the formset atomically
-    def post(self, request, *args, **kwargs):
-        self.object = self.get_object()
-        form = self.get_form()
-        formset = TransactionLineItemFormSet(self.request.POST, instance=self.object)
-
-        if form.is_valid() and formset.is_valid():
-            with db_transaction.atomic():
-                self.object = form.save()
-                formset.instance = self.object
-                formset.save()
-                
-                # After saving, trigger the total calculation and save the header again
-                self.object.total_amount = self.object.calculate_total()
-                self.object.save()
-                
-            return self.form_valid(form)
-        else:
-            return self.form_invalid(form)
-        
+     
 def add_line_item(request, pk):
     """Handles HTMX request to add one empty line item row."""
     if request.method == 'POST':
