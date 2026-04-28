@@ -8,8 +8,8 @@ from ERP.forms.forms import CreateTransactionForm, TransactionLineItemFormSet
 
 def transaction_create(request):
     if request.method == "POST":
-        form = CreateTransactionForm(request.POST)
-        formset = TransactionLineItemFormSet(request.POST)
+        form = CreateTransactionForm(request.POST, user=request.user)
+        formset = TransactionLineItemFormSet(request.POST, form_kwargs={'user': request.user})
         if form.is_valid() and formset.is_valid():
             with db_transaction.atomic():
                 transaction = form.save(commit=False)
@@ -24,8 +24,8 @@ def transaction_create(request):
                 transaction.save()
             return redirect('transaction_details', pk=transaction.pk)
     else:
-        form = CreateTransactionForm()
-        formset = TransactionLineItemFormSet()
+        form = CreateTransactionForm(user=request.user)
+        formset = TransactionLineItemFormSet(form_kwargs={'user': request.user})
     context = {'form':form, 'formset':formset}
     return render(request, 'ERP/transactions/transaction_create_form.html', context)
 
@@ -40,7 +40,7 @@ def transaction_delete(request, pk):
     return HttpResponse('')
 
 def get_line_item(request):
-    formset=TransactionLineItemFormSet()
+    formset=TransactionLineItemFormSet(form_kwargs={'user': request.user})
     form=formset.empty_form
     return render(request, 'ERP/transactions/_line_item_row_copy.html', {'form':form})
 
