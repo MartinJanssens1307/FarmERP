@@ -49,11 +49,21 @@ def transactions_partial(request, customer_id):
     return render(request, 'ERP/transactions/transaction_list.html#transaction_list', {'transaction_list':transactions})
 
 def transaction_print(request, pk):
-    transaction=get_object_or_404(Transaction.objects.select_related('customer').prefetch_related('line_items', 'customer__addresses'), pk=pk)
+    transaction=get_object_or_404(Transaction.objects.prefetch_related('line_items'), pk=pk)
     context={
         'transaction': transaction,
-        'customer': transaction.customer,
-        'line_items': transaction.line_items.all(),
-        'address':transaction.customer.get_billing_address()
+        'billing':transaction.billing_snapshot
     }
     return render(request, 'ERP/transactions/transaction_print.html', context)
+
+def transaction_validate(request, pk):
+    transaction = get_object_or_404(Transaction, id=pk)
+    transaction.status = "completed"
+    transaction.save()
+    response = render(request, 'ERP/transactions/transaction_details.html#transaction_actions', {
+        'transaction': transaction
+    })
+    
+    # This header is the magic link
+    response['HX-Trigger'] = 'transaction-updated'
+    return response

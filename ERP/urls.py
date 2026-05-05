@@ -41,4 +41,5 @@ urlpatterns = [
     path('transaction/<int:pk>', transaction_views.transaction_details, name='transaction_details'),
     path('transaction_partial/<int:customer_id>', transaction_views.transactions_partial, name='transaction_list_partial'),
     path('transaction_print/<int:pk>', transaction_views.transaction_print, name='transaction_print'),
+    path('transaction_validate/<int:pk>', transaction_views.transaction_validate, name='transaction_validate'),
 ]

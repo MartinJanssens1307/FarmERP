@@ -1,5 +1,6 @@
 from django.contrib.auth.models import User
-from django.db import models
+from django.db import models, transaction
+from django.db.models import Max
 from django.urls import reverse
 
 # Create your models here.
@@ -46,7 +47,6 @@ class Address(models.Model):
         ]
 
     def save(self, *args, **kwargs):
-        from django.db import transaction
         with transaction.atomic():
             if self.is_billing_default:
                 # transaction.atomic() ensures that if the 'uncheck' fails, 
@@ -69,6 +69,7 @@ class Address(models.Model):
 
 class Customer(BusinessPartner):
     tva_number = models.CharField(max_length=32, blank=True)
+    
     def __str__(self):
         return f"{self.first_name} {self.name}"
     
@@ -77,7 +78,9 @@ class Customer(BusinessPartner):
     
     def get_billing_address(self):
         return (self.addresses.filter(is_billing_default=True).first() or 
-                self.addresses.filter(is_billing=True).first())
+                self.addresses.filter(is_billing=True).first() or
+                self.addresses.first()
+                )
 
     def get_shipping_address(self):
         return (self.addresses.filter(is_shipping_default=True).first() or 
@@ -103,6 +106,20 @@ class Transaction(models.Model):
     type = models.CharField(max_length=8, choices=[("sale", "Sale"), ("purchase", "Purchase")], default='sale')
     status = models.CharField(max_length=20, choices=[("new", "New"), ("progress", "In Progress"), ("cancelled", "Cancelled"), ("completed", "Completed")], default='new')
     owner = models.ForeignKey(User, on_delete=models.CASCADE)
+    # The math part (still used for Max+1)
+    local_sequence = models.PositiveIntegerField(null=True, blank=True, editable=False)
+    # The permanent record part (unalterable after save)
+    public_id = models.CharField(max_length=30, null=True, blank=True, editable=False)
+    # The address snapshot (JSON)
+    billing_snapshot = models.JSONField(null=True, blank=True, editable=False)
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=['owner', 'public_id'], 
+                name='unique_public_id_per_owner'
+            )
+        ]
 
     def calculate_totals(self):
         """Calculates the sum of all related line item totals."""
@@ -115,6 +132,30 @@ class Transaction(models.Model):
         }
     
     def save(self, *args, **kwargs):
+        # Si on valide la transaction et qu'elle n'a pas encore de numéro
+        if self.status == 'completed' and not self.public_id:
+            with transaction.atomic():
+                # 1. Calcul de la séquence (seulement au moment de la validation)
+                last_no = Transaction.objects.filter(
+                    owner=self.owner,
+                    status='completed' # On ne compte que les validées
+                ).aggregate(Max('local_sequence'))['local_sequence__max']
+                
+                self.local_sequence = (last_no or 0) + 1
+                
+                # 2. On fige le numéro et l'adresse
+                year = self.creation_date.year if self.creation_date else 2026
+                self.public_id = f"INV-{year}-{self.local_sequence:04d}"
+                
+                address = self.customer.get_billing_address()
+                if address:
+                    self.billing_snapshot = {
+                        "name": f"{self.customer.title} {self.customer.name} {self.customer.first_name}",
+                        "address1": f"{address.street} {address.number}",
+                        "address2": f"{address.postal_code} {address.city}",
+                        "address3": f"{address.get_country_display()}"
+                    }
+        
         super().save(*args, **kwargs)
     
     def __str__(self):

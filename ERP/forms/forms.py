@@ -35,9 +35,6 @@ class CreateProductForm(TailwindFormMixin, forms.ModelForm):
 
 # Define the form for the individual line item (used by the formset)
 class TransactionLineItemForm(TailwindFormMixin, forms.ModelForm):
-    # Use ModelChoiceField with a custom queryset to restrict product choices 
-    # to those owned by the current user (if Product has an 'owner' field)
-    
     total_gross = forms.DecimalField(required=False)
     
     def __init__(self, *args, **kwargs):
@@ -72,6 +69,7 @@ class CreateTransactionForm(TailwindFormMixin, forms.ModelForm):
     class Meta:
         model = Transaction
         fields = ['customer','type','status']
+        
     def __init__(self, *args, **kwargs):
         # 1. Extract the user passed from the view
         user = kwargs.pop('user', None) 
