@@ -1,22 +1,29 @@
-/* This is the input file read by the Tailwind CLI.
-    The 'content' array in tailwind.config.js must be configured 
-    for these @apply directives to work correctly.
+/* ERP/static/src/input.css */
+
+/* v4: This single import loads the theme, base styles, and utilities */
+@import "tailwindcss";
+
+/*
+   In v4, we use @layer components to ensure these custom classes
+   interact correctly with Tailwind's built-in styles.
 */
+@layer components {
+    /* Custom class injected by your Python Mixin */
+    .form-input {
+        @apply w-full border border-gray-300 p-2 rounded-lg shadow-sm transition duration-150;
+    }
 
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+    .form-input:focus {
+        @apply outline-none ring-2 ring-sky-700;
+    }
 
-/* Define the custom class that the Python Mixin automatically injects */
-.form-input {
-    @apply w-full border border-gray-300 p-2 rounded-lg shadow-sm transition duration-150;
-}
+    /* Custom class for your HTML label tags */
+    .form-label {
+        @apply text-lg font-semibold text-gray-800;
+    }
 
-.form-input:focus {
-    @apply outline-none ring-2 ring-sky-700;
-}
-
-/* Define the custom class used on the <label> tag in the HTML template */
-.form-label {
-    @apply text-lg font-semibold text-gray-800;
+    /* Restore v3 behavior: button cursor pointer (v4 removed this) */
+    button {
+        @apply cursor-pointer;
+    }
 }

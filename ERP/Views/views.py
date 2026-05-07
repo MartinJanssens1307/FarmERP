@@ -37,14 +37,3 @@ def register(request):
     else:
         form = RegistrationForm()
     return render(request, 'ERP/register.html', {'form': form})
-  
-#Transaction related views
-class TransactionListView(ListView):
-    model = Transaction
-    template_name = 'ERP/transactions/transaction_list.html'
-    context_object_name = 'transaction_list' # Use a clearer variable name in the template
-    
-    def get_queryset(self):
-        # **Security Filter**
-        # Only show transactions owned by the current logged-in user
-        return Transaction.objects.filter(owner=self.request.user).order_by('-creation_date')

@@ -6,6 +6,11 @@ from django.db import transaction as db_transaction
 from ERP.models import Transaction, TransactionLineItem
 from ERP.forms.forms import CreateTransactionForm, TransactionLineItemFormSet
 
+def transaction_list(request):
+    transactions = Transaction.objects.filter(owner=request.user).order_by('-creation_date')
+    context = {'transaction_list':transactions}
+    return render(request, 'ERP/transactions/transaction_list.html', context)
+
 def transaction_create(request):
     if request.method == "POST":
         form = CreateTransactionForm(request.POST, user=request.user)
@@ -36,8 +41,9 @@ def transaction_details(request, pk):
 @require_http_methods(["POST", "DELETE"])
 def transaction_delete(request, pk):
     transaction = get_object_or_404(Transaction, id=pk)
-    transaction.delete()
-    return HttpResponse('')
+    if transaction.status != 'completed':  
+        transaction.delete()
+        return HttpResponse('')
 
 def get_line_item(request):
     formset=TransactionLineItemFormSet(form_kwargs={'user': request.user})
@@ -52,6 +58,7 @@ def transaction_print(request, pk):
     transaction=get_object_or_404(Transaction.objects.prefetch_related('line_items'), pk=pk)
     context={
         'transaction': transaction,
+        'line_items': transaction.line_items.all(),
         'billing':transaction.billing_snapshot
     }
     return render(request, 'ERP/transactions/transaction_print.html', context)
@@ -63,7 +70,6 @@ def transaction_validate(request, pk):
     response = render(request, 'ERP/transactions/transaction_details.html#transaction_actions', {
         'transaction': transaction
     })
-    
     # This header is the magic link
     response['HX-Trigger'] = 'transaction-updated'
     return response

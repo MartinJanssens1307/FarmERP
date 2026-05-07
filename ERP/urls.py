@@ -32,14 +32,12 @@ urlpatterns = [
     path('product/<int:pk>/delete/', product_views.delete_product, name='delete_product'),
 
 # --- Transaction paths ---
-    path('transactions/', views.TransactionListView.as_view(), name='transaction_list'),
-    path('transactions/<int:pk>/delete', transaction_views.transaction_delete, name='transaction_delete'),
-
-# --- Transaction alternate paths ---
+    path('transactions/', transaction_views.transaction_list, name='transaction_list'),
     path('transaction/create', transaction_views.transaction_create, name='transaction_creation'),
-    path('transaction/add-line/', transaction_views.get_line_item, name='get_line_item'),
     path('transaction/<int:pk>', transaction_views.transaction_details, name='transaction_details'),
+    path('transactions/<int:pk>/delete', transaction_views.transaction_delete, name='transaction_delete'),
+    path('transaction/add-line/', transaction_views.get_line_item, name='get_line_item'),
     path('transaction_partial/<int:customer_id>', transaction_views.transactions_partial, name='transaction_list_partial'),
-    path('transaction_print/<int:pk>', transaction_views.transaction_print, name='transaction_print'),
     path('transaction_validate/<int:pk>', transaction_views.transaction_validate, name='transaction_validate'),
+    path('transaction_print/<int:pk>', transaction_views.transaction_print, name='transaction_print'),
 ]
