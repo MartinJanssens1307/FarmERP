@@ -2,6 +2,7 @@ from django.contrib.auth.models import User
 from django.db import models, transaction
 from django.db.models import Max
 from django.urls import reverse
+from django.utils import timezone
 
 # Create your models here.
 class BusinessPartner(models.Model):
@@ -131,22 +132,43 @@ class Transaction(models.Model):
             'vat': totals['vat'] or 0
         }
     
-    def save(self, *args, **kwargs):
-        # Si on valide la transaction et qu'elle n'a pas encore de numéro
-        if self.status == 'completed' and not self.public_id:
-            with transaction.atomic():
-                # 1. Calcul de la séquence (seulement au moment de la validation)
+    def validate_and_freeze(self):
+        """
+        Orchestre la validation complète de la transaction :
+        1. Snapshot des lignes (produits, prix, tva)
+        2. Séquence comptable et ID public immuable
+        3. Snapshot des données client et adresse de facturation
+        4. Passage au statut final
+        """
+        # Sécurité : Si déjà complétée, on ne fait rien (évite les doubles clics/bugs)
+        if self.status == 'completed':
+            return
+
+        # On englobe TOUT dans une transaction atomique SQL
+        # Si une étape plante (ex: plus de réseau, erreur DB), rien n'est enregistré.
+        with transaction.atomic():
+            
+            # --- ÉTAPE 1 : Gravure des lignes d'items ---
+            for item in self.line_items.all():
+                if item.product:
+                    item.product_name_snap = item.product.name
+                    item.save()
+
+            # --- ÉTAPE 2 : Calcul de la séquence métier ---
+            # Condition gardée : seulement si elle n'a pas déjà un public_id
+            if not self.public_id:
                 last_no = Transaction.objects.filter(
                     owner=self.owner,
-                    status='completed' # On ne compte que les validées
+                    status='completed'
                 ).aggregate(Max('local_sequence'))['local_sequence__max']
                 
                 self.local_sequence = (last_no or 0) + 1
                 
-                # 2. On fige le numéro et l'adresse
-                year = self.creation_date.year if self.creation_date else 2026
+                year = self.creation_date.year if self.creation_date else timezone.now().year
                 self.public_id = f"INV-{year}-{self.local_sequence:04d}"
-                
+
+            # --- ÉTAPE 3 : Snapshot du client et de l'adresse ---
+            if self.customer:
                 address = self.customer.get_billing_address()
                 if address:
                     self.billing_snapshot = {
@@ -155,8 +177,12 @@ class Transaction(models.Model):
                         "address2": f"{address.postal_code} {address.city}",
                         "address3": f"{address.get_country_display()}"
                     }
-        
-        super().save(*args, **kwargs)
+
+            # --- ÉTAPE 4 : Application du sceau officiel ---
+            self.status = "completed"
+            
+            # Sauvegarde finale de la transaction parent
+            self.save()
     
     def __str__(self):
         return f"{self.type.capitalize()} with {self.customer} for €{self.total_gross}"
@@ -170,12 +196,15 @@ class TransactionLineItem(models.Model):
     total_net = models.DecimalField(max_digits=12, decimal_places=2) # Qty * Price
     total_vat = models.DecimalField(max_digits=12, decimal_places=2) # Net * (VAT/100)
     total_gross = models.DecimalField(max_digits=12, decimal_places=2) # Net + VAT
+    product_name_snap = models.CharField(max_length=255)
 
     def save(self, *args, **kwargs):
         # Automatically calculate the line_total before saving
         self.total_net = self.quantity * self.unit_price_net
         self.total_vat = self.total_net * (self.vat_rate_percentage / 100)
         self.total_gross = self.total_net + self.total_vat
+        if self.transaction.status == 'completed' and self.product and not self.product_name_snapshot:
+            self.product_name_snap = self.product
         super().save(*args, **kwargs)
 
     def __str__(self):

@@ -65,8 +65,7 @@ def transaction_print(request, pk):
 
 def transaction_validate(request, pk):
     transaction = get_object_or_404(Transaction, id=pk)
-    transaction.status = "completed"
-    transaction.save()
+    transaction.validate_and_freeze()
     response = render(request, 'ERP/transactions/transaction_details.html#transaction_actions', {
         'transaction': transaction
     })

@@ -69,7 +69,7 @@
             <tbody class="text-gray-800">
                 {% for item in line_items %}
                 <tr class="border-b border-gray-200">
-                    <td class="px-4 py-4 text-sm font-medium">{{ item.product }}</td>
+                    <td class="px-4 py-4 text-sm font-medium">{{ item.product_name_snap }}</td>
                     <td class="px-4 py-4 text-sm text-center">{{ item.quantity }}</td>
                     <td class="px-4 py-4 text-sm text-right">€{{ item.unit_price_net }}</td>
                     <td class="px-4 py-4 text-sm text-right">{{ item.vat_rate_percentage }}%</td>
