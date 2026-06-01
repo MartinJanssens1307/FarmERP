@@ -6,12 +6,12 @@ from ERP.models import Address
 from ERP.forms.forms import CreateAddressForm, Customer
 
 def address_list(request, customer_id):
-    customer = get_object_or_404(Customer, pk=customer_id, owner=request.user)
+    customer = get_object_or_404(Customer, pk=customer_id, tenant=request.tenant)
     addresses = customer.addresses.all().order_by('-is_billing_default', '-is_shipping_default')
     return render(request, "ERP/address/address_detail.html", {"addresses": addresses, "customer": customer})
 
 def address_create(request, pk):
-    customer = get_object_or_404(Customer, pk=pk, owner=request.user)
+    customer = get_object_or_404(Customer, pk=pk, tenant=request.tenant)
     if request.method =="POST":
         form = CreateAddressForm(request.POST)
         if form.is_valid():

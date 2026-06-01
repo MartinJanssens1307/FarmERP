@@ -34,6 +34,19 @@
             <a href="#" class="text-gray-700 hover:text-green-600 font-medium">Contact</a>
             {% if user.is_authenticated %}
             <a href="/admin" class="text-gray-700 hover:text-yellow-500 font-medium">Admin</a>
+            <div class="relative inline-block text-left" id="settings-menu-wrapper">
+                <button id="settings-button" type="button" class="text-gray-700 hover:text-green-600 font-medium inline-flex items-center" aria-expanded="false" aria-haspopup="true">
+                    Settings
+                </button>
+                <!-- Dropdown panel, hidden by default -->
+                <div id="settings-dropdown" class="origin-top-right absolute right-0 mt-2 w-48 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 hidden z-50">
+                    <div class="py-1" role="menu" aria-orientation="vertical" aria-labelledby="settings-button">
+                        <a href="{% url 'company_data' %}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" role="menuitem">Company Data</a>
+                        <a href="#" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" role="menuitem">Profile</a>
+                        <a href="#" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" role="menuitem">Preferences</a>
+                    </div>
+                </div>
+            </div>
             <form method="post" action="{% url 'logout' %}" style="display: inline;">
                 {% csrf_token %}
                 <button type="submit" class="bg-red-700 text-white px-4 py-2 rounded-lg hover:bg-red-800 transition duration-300">Logout</button>
@@ -69,15 +82,38 @@
         {% endblock %}
 </body>
 <script>
-    // Get the two elements we need to interact with
+document.addEventListener('DOMContentLoaded', () => {
+    // --- MOBILE MENU ---
     const toggleButton = document.getElementById('mobile-menu-toggle');
     const mobileMenu = document.getElementById('mobile-menu');
 
-    // Add an event listener to the button
-    toggleButton.addEventListener('click', function() {
-        // Core logic: just toggle the 'hidden' class.
-        // Tailwind handles all the positioning and stacking applied in the HTML.
-        mobileMenu.classList.toggle('hidden');
-    });
+    if (toggleButton && mobileMenu) {
+        toggleButton.addEventListener('click', () => {
+            const isHidden = mobileMenu.classList.toggle('hidden');
+            toggleButton.setAttribute('aria-expanded', String(!isHidden));
+        });
+    }
+
+    // --- SETTINGS DROPDOWN ---
+    const settingsButton = document.getElementById('settings-button');
+    const settingsDropdown = document.getElementById('settings-dropdown');
+    const settingsWrapper = document.getElementById('settings-menu-wrapper');
+
+    if (settingsButton && settingsDropdown && settingsWrapper) {
+        settingsButton.addEventListener('click', (event) => {
+            event.stopPropagation();
+            const isHidden = settingsDropdown.classList.toggle('hidden');
+            settingsButton.setAttribute('aria-expanded', String(!isHidden));
+        });
+
+        // Close settings when clicking outside
+        document.addEventListener('click', (e) => {
+            if (!settingsDropdown.classList.contains('hidden') && !settingsWrapper.contains(e.target)) {
+                settingsDropdown.classList.add('hidden');
+                settingsButton.setAttribute('aria-expanded', 'false');
+            }
+        });
+    }
+});
 </script>
 </html>

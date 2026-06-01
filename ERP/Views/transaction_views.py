@@ -7,18 +7,18 @@ from ERP.models import Transaction, TransactionLineItem
 from ERP.forms.forms import CreateTransactionForm, TransactionLineItemFormSet
 
 def transaction_list(request):
-    transactions = Transaction.objects.filter(owner=request.user).order_by('-creation_date')
+    transactions = Transaction.objects.filter(tenant=request.tenant).order_by('-creation_date')
     context = {'transaction_list':transactions}
     return render(request, 'ERP/transactions/transaction_list.html', context)
 
 def transaction_create(request):
     if request.method == "POST":
-        form = CreateTransactionForm(request.POST, user=request.user)
-        formset = TransactionLineItemFormSet(request.POST, form_kwargs={'user': request.user})
+        form = CreateTransactionForm(request.POST, tenant=request.tenant)
+        formset = TransactionLineItemFormSet(request.POST, form_kwargs={'tenant': request.tenant})
         if form.is_valid() and formset.is_valid():
             with db_transaction.atomic():
                 transaction = form.save(commit=False)
-                transaction.owner = request.user
+                transaction.tenant = request.tenant
                 transaction.save()
                 formset.instance = transaction
                 formset.save()
@@ -29,8 +29,8 @@ def transaction_create(request):
                 transaction.save()
             return redirect('transaction_details', pk=transaction.pk)
     else:
-        form = CreateTransactionForm(user=request.user)
-        formset = TransactionLineItemFormSet(form_kwargs={'user': request.user})
+        form = CreateTransactionForm(tenant=request.tenant)
+        formset = TransactionLineItemFormSet(form_kwargs={'tenant': request.tenant})
     context = {'form':form, 'formset':formset}
     return render(request, 'ERP/transactions/transaction_create_form.html', context)
 
@@ -46,12 +46,12 @@ def transaction_delete(request, pk):
         return HttpResponse('')
 
 def get_line_item(request):
-    formset=TransactionLineItemFormSet(form_kwargs={'user': request.user})
+    formset=TransactionLineItemFormSet(form_kwargs={'tenant': request.tenant})
     form=formset.empty_form
-    return render(request, 'ERP/transactions/_line_item_row_copy.html', {'form':form})
+    return render(request, 'ERP/transactions/_line_item_row.html', {'form':form})
 
 def transactions_partial(request, customer_id):
-    transactions=Transaction.objects.filter(customer=customer_id, owner=request.user)
+    transactions=Transaction.objects.filter(customer=customer_id, tenant=request.tenant)
     return render(request, 'ERP/transactions/transaction_list.html#transaction_list', {'transaction_list':transactions})
 
 def transaction_print(request, pk):
@@ -59,7 +59,8 @@ def transaction_print(request, pk):
     context={
         'transaction': transaction,
         'line_items': transaction.line_items.all(),
-        'billing':transaction.billing_snapshot
+        'billing':transaction.billing_snapshot,
+        'issuer':transaction.issuer_snapshot
     }
     return render(request, 'ERP/transactions/transaction_print.html', context)
 

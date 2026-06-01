@@ -39,36 +39,42 @@
                                 <th class="px-5 py-3 border-b-2 border-gray-200 text-left text-xs font-semibold uppercase tracking-wider">Price at Sale</th>
                                 <th class="px-5 py-3 border-b-2 border-gray-200 text-left text-xs font-semibold uppercase tracking-wider">Vat Rate</th>
                                 <th class="px-5 py-3 border-b-2 border-gray-200 text-left text-xs font-semibold uppercase tracking-wider">Line Total</th>
-                                <th class="px-5 py-3 border-b-2 border-gray-200 text-center text-xs font-semibold uppercase tracking-wider">Action</th>
                             </tr>
                         </thead>
                         <tbody id="line-item-tbody" class="bg-white">
                             {{ formset.management_form }}
                             {% for form in formset %}
-                                {% include 'ERP/transactions/_line_item_row_copy.html' %}                      
+                                {% include 'ERP/transactions/_line_item_row.html' %}                      
                             {% endfor %}
                         </tbody>
                     </table>
                 </div>
             </div>
         <div class="flex justify-between items-center mb-6">
-            <button type="button" 
-                    hx-get="{% url 'get_line_item' %}"
-                    hx-target="#line-item-tbody"
-                    hx-swap="beforeend"
-                    hx-on="htmx:afterSettle: addNewLine()"
-                    class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline transition duration-300">
-                + Add Product Line
-            </button>
+            <div class="flex space-x-3">
+                <button type="button" 
+                        hx-get="{% url 'get_line_item' %}"
+                        hx-target="#line-item-tbody"
+                        hx-swap="beforeend"
+                        hx-on="htmx:afterSettle: addNewLine()"
+                        class="bg-sky-300 hover:bg-sky-400 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline transition duration-300">
+                    +
+                </button>
+                <button type="button" 
+                    onclick="removeLastLine()" 
+                    class="bg-red-300 hover:bg-red-400 text-white font-semibold py-2 px-4 rounded focus:outline-none focus:shadow-outline transition duration-300">
+                -
+                </button>
+            </div>
             <div id="total-update-container" class="text-lg font-semibold text-gray-800">
                 Total: €<span id="transaction-total-display">{{ transaction.total_amount|default:"0.00" }}</span>
             </div>
         </div>
         <div class="flex items-center justify-center">
-            <button type="submit" class="bg-sky-500 hover:bg-sky-700 text-white font-semibold py-2 px-4 rounded">
-                Create Transaction
+            <button type="submit" class="bg-green-700 hover:bg-green-800 text-white font-semibold py-2 px-4 rounded">
+                Create
             </button>
-            <a href="{% url 'transaction_list' %}" class="bg-yellow-500 hover:bg-yellow-700 text-white font-semibold py-2 px-4 rounded ml-2">Cancel</a>
+            <a href="{% url 'transaction_list' %}" class="bg-yellow-500 hover:bg-yellow-600 text-white font-semibold py-2 px-4 rounded ml-2">Cancel</a>
         </div>
     </form>
 </div>
@@ -87,5 +93,21 @@ document.addEventListener('htmx:afterSettle', (evt) => {
         if (total) total.value = rows.length;
     }
 });
+
+function removeLastLine() {
+    const rows = document.querySelectorAll('.item-row');
+    
+    // Stop here if there are no rows left to delete
+    if (rows.length === 0) return; 
+
+    // 1. Remove the last row element from the screen
+    rows[rows.length - 1].remove();
+
+    // 2. Decrement the Django counter field by 1 so the backend stays in sync
+    const totalFormsInput = document.querySelector('input[name$="-TOTAL_FORMS"]');
+    if (totalFormsInput) {
+        totalFormsInput.value = rows.length - 1;
+    }
+}
 </script>
 {% endblock %}

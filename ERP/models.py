@@ -4,14 +4,30 @@ from django.db.models import Max
 from django.urls import reverse
 from django.utils import timezone
 
+CountryList = [("be", "Belgium"),("fr", "France"),("nl","Netherlands"),("de","Germany")]
 # Create your models here.
+class Company(models.Model):
+    name = models.CharField(max_length=255)
+    vat_number = models.CharField(max_length=32, blank=True, null=True)
+# Legal address
+    street = models.CharField(max_length=255, blank=True)
+    number = models.CharField(max_length=20, blank=True)
+    postal_code = models.CharField(max_length=20, blank=True)
+    city = models.CharField(max_length=100, blank=True)
+    country = models.CharField(choices=CountryList, blank=True)
+# La passerelle ManyToMany vers les Users avec notre table pivot personnalisée
+    users = models.ManyToManyField(User, related_name='companies', through='CompanyAccess')
+
+    def __str__(self):
+        return self.name
+    
 class BusinessPartner(models.Model):
     title = models.CharField(max_length=5, blank=True, choices=[('MR', 'Mr'), ('MME', 'Mme')])
     name = models.CharField(max_length=255)
     first_name = models.CharField(max_length=64, blank=True)
     email = models.EmailField(max_length=255, blank=True)
     phone = models.CharField(max_length=30, blank=True)
-    owner = models.ForeignKey(User, on_delete=models.CASCADE, related_name='partners')
+    tenant = models.ForeignKey(Company, on_delete=models.CASCADE, related_name='partners')
     ROLES = [('CUS', 'Customer'), ('SUP', 'Supplier'), ('CON', 'Contact'), ('GEN', 'General')]
     role = models.CharField(max_length=3, choices=ROLES, default='CUS')
     is_active = models.BooleanField(default=True)
@@ -25,7 +41,6 @@ class Address(models.Model):
     postal_code = models.CharField(max_length=20)
     city = models.CharField(max_length=64)
     p_o = models.CharField(max_length=12, verbose_name="p.o box", blank=True)
-    CountryList = [("be", "Belgium"),("fr", "France"),("nl","Netherlands"),("de","Germany")]
     country = models.CharField(choices=CountryList)
     partner = models.ForeignKey(BusinessPartner, on_delete=models.CASCADE, related_name='addresses')
     is_shipping = models.BooleanField(default=True)
@@ -68,8 +83,22 @@ class Address(models.Model):
     def __str__(self):
         return f"{self.street}, {self.number} {self.city}"
 
+class CompanyAccess(models.Model):
+    ROLE_CHOICES = [('OW', 'Owner'),('EM', 'Employee'),('AC', 'Accountant')]
+    
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='company_permissions')
+    company = models.ForeignKey(Company, on_delete=models.CASCADE, related_name='user_permissions')
+    role = models.CharField(max_length=4, choices=ROLE_CHOICES, default='OW')
+
+    class Meta:
+        # Sécurité : Un utilisateur ne peut pas avoir deux rôles différents dans la même ferme
+        unique_together = ('user', 'company')
+
+    def __str__(self):
+        return f"{self.user.username} - {self.company.name} ({self.get_role_display()})"
+        
 class Customer(BusinessPartner):
-    tva_number = models.CharField(max_length=32, blank=True)
+    vat_number = models.CharField(max_length=32, blank=True)
     
     def __str__(self):
         return f"{self.first_name} {self.name}"
@@ -93,12 +122,14 @@ class Product(models.Model):
     unit_measure = models.CharField(max_length=3, choices=[("kg", "Kg"), ("l", "L"), ("t", "Ton"), ("u", "Unit"), ("h", "Hour"),("a", "Are"),("ha", "Hectare")])
     unit_price = models.DecimalField(max_digits=10, decimal_places=2)
     type = models.CharField(max_length=3, choices=[("o", "Object"), ("s", "Service")], default='o')
-    owner = models.ForeignKey(User, on_delete=models.CASCADE)
+    tenant = models.ForeignKey(Company, on_delete=models.CASCADE, related_name='products')
 
     def __str__(self):
         return self.name
         
 class Transaction(models.Model):
+    tenant = models.ForeignKey(Company, on_delete=models.PROTECT, related_name='transactions')
+    created_by = models.ForeignKey(User, null=True, blank=True, on_delete=models.SET_NULL)
     creation_date = models.DateTimeField(auto_now_add=True)
     customer = models.ForeignKey(Customer, on_delete=models.PROTECT, related_name="transactions")
     total_net = models.DecimalField(max_digits=10, decimal_places=2, blank=True, null=True)
@@ -106,19 +137,19 @@ class Transaction(models.Model):
     total_gross = models.DecimalField(max_digits=10, decimal_places=2, blank=True, null=True)
     type = models.CharField(max_length=8, choices=[("sale", "Sale"), ("purchase", "Purchase")], default='sale')
     status = models.CharField(max_length=20, choices=[("new", "New"), ("progress", "In Progress"), ("cancelled", "Cancelled"), ("completed", "Completed")], default='new')
-    owner = models.ForeignKey(User, on_delete=models.CASCADE)
     # The math part (still used for Max+1)
     local_sequence = models.PositiveIntegerField(null=True, blank=True, editable=False)
     # The permanent record part (unalterable after save)
     public_id = models.CharField(max_length=30, null=True, blank=True, editable=False)
     # The address snapshot (JSON)
     billing_snapshot = models.JSONField(null=True, blank=True, editable=False)
+    issuer_snapshot = models.JSONField(null=True, blank=True, editable=False)
 
     class Meta:
         constraints = [
             models.UniqueConstraint(
-                fields=['owner', 'public_id'], 
-                name='unique_public_id_per_owner'
+                fields=['tenant', 'public_id'], 
+                name='unique_public_id_per_tenant'
             )
         ]
 
@@ -138,7 +169,8 @@ class Transaction(models.Model):
         1. Snapshot des lignes (produits, prix, tva)
         2. Séquence comptable et ID public immuable
         3. Snapshot des données client et adresse de facturation
-        4. Passage au statut final
+        4. Snapshot des données company
+        5. Passage au statut final
         """
         # Sécurité : Si déjà complétée, on ne fait rien (évite les doubles clics/bugs)
         if self.status == 'completed':
@@ -158,7 +190,7 @@ class Transaction(models.Model):
             # Condition gardée : seulement si elle n'a pas déjà un public_id
             if not self.public_id:
                 last_no = Transaction.objects.filter(
-                    owner=self.owner,
+                    tenant=self.tenant,
                     status='completed'
                 ).aggregate(Max('local_sequence'))['local_sequence__max']
                 
@@ -173,11 +205,19 @@ class Transaction(models.Model):
                 if address:
                     self.billing_snapshot = {
                         "name": f"{self.customer.title} {self.customer.name} {self.customer.first_name}",
-                        "address1": f"{address.street} {address.number}",
+                        "vat_number":self.customer.vat_number,
+                        "address1": f"{address.street}, {address.number}",
                         "address2": f"{address.postal_code} {address.city}",
                         "address3": f"{address.get_country_display()}"
                     }
-
+            if self.tenant:
+                self.issuer_snapshot = {
+                "name": self.tenant.name,
+                "vat_number": self.tenant.vat_number,
+                "address1": f"{self.tenant.street}, {self.tenant.number}",
+                "address2": f"{self.tenant.postal_code} {self.tenant.city}",
+                "address3": f"{self.tenant.get_country_display()}"
+                }
             # --- ÉTAPE 4 : Application du sceau officiel ---
             self.status = "completed"
             
@@ -209,3 +249,4 @@ class TransactionLineItem(models.Model):
 
     def __str__(self):
         return f"{self.quantity} x {self.product.name} on Transaction #{self.transaction.pk}"
+    

@@ -1,19 +1,15 @@
-from django.contrib.auth.decorators import login_not_required
+from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.contrib.auth import login
 from django.contrib.auth.views import LoginView
-from django.db import transaction as db_transaction
-from django.http import HttpResponse
 from django.shortcuts import redirect, render, get_object_or_404
 from django.urls import reverse_lazy
-from django.views.generic import ListView, UpdateView
-from django.views.generic.edit import CreateView
 
-from ERP.models import Transaction
-from ERP.forms.forms import LoginForm, RegistrationForm, TransactionLineItemFormSet
+from ERP.forms.forms import LoginForm, RegistrationForm, CreateCompanyForm
+from ERP.models import Company, CompanyAccess
+from .utils import get_current_company
 
 #General views
-@login_not_required   
 def index(request):
     return render(request, "ERP/index.html")
 
@@ -24,7 +20,6 @@ def construction(request):
 class Login(LoginView):
     authentication_form = LoginForm
 
-@login_not_required   
 def register(request):
     if request.method == 'POST':
         form = RegistrationForm(request.POST)
@@ -37,3 +32,17 @@ def register(request):
     else:
         form = RegistrationForm()
     return render(request, 'ERP/register.html', {'form': form})
+
+@login_required
+def company_data(request):
+    company = get_current_company(request)
+    if request.method=='POST':
+        #get_object_or_404(Company, pk=request.session.get('current_company_id'))
+        form = CreateCompanyForm(request.POST, instance=company)
+        if form.is_valid():
+            tenant=form.save()
+            CompanyAccess.objects.get_or_create(user=request.user, company=tenant, role='OW')
+            return redirect('index')
+    form = CreateCompanyForm(instance=company)
+    context = {"form":form}
+    return render(request, 'ERP/Company/company_form.html', context)

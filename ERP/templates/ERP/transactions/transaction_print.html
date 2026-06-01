@@ -33,11 +33,11 @@
             <p class="text-gray-600 mt-1">{{transaction.public_id}}</p>
         </div>
         <div class="text-right text-gray-800">
-            <h2 class="text-xl font-bold">Japhagri</h2>
-            <p>Rue de Névremont, 28</p>
-            <p>5070 Fosses-La-Ville, Belgium</p>
-            <p class="text-sm">VAT: BE466.483.985
-            </p>
+            <h2 class="text-xl font-bold">{{ issuer.name }}</h2>
+            <p>{{ issuer.address1 }}</p>
+            <p>{{ issuer.address2 }}</p>
+            <p>{{ issuer.address3 }}</p>
+            <p>{{ issuer.vat_number }}</p>
         </div>
     </div>
 
@@ -48,6 +48,7 @@
             <p class="text-gray-600">{{ billing.address1|default:"No address provided" }}</p>
             <p class="text-gray-600">{{ billing.address2 }}</p>
             <p class="text-gray-600">{{ billing.address3 }}</p>
+            <p class="text-gray-600">{{ billing.vat_number }}</p>
         </div>
         <div class="text-right">
             <h3 class="text-xs font-bold uppercase text-gray-500 mb-1">Transaction Info</h3>

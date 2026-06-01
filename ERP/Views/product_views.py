@@ -6,7 +6,7 @@ from ERP.models import Product
 from ERP.forms.forms import CreateProductForm
 
 def product_list(request):
-    products = Product.objects.filter(owner=request.user)
+    products = Product.objects.filter(tenant=request.tenant)
     context = {'product_list': products}
     return render(request, 'ERP/inventory/product_list.html', context)
 
@@ -15,7 +15,7 @@ def product_create(request):
         form = CreateProductForm(request.POST)
         if form.is_valid():
             product = form.save(commit=False)
-            product.owner = request.user
+            product.tenant = request.tenant
             product.save()
             return redirect('product_detail', pk=product.pk)
 
@@ -24,13 +24,13 @@ def product_create(request):
     return render(request, 'ERP/inventory/product_form.html', context)
 
 def product_details(request, pk):
-    product = get_object_or_404(Product, pk=pk, owner=request.user)
+    product = get_object_or_404(Product, pk=pk, tenant=request.tenant)
     if request.headers.get('HX-Request'):
         return render(request, 'ERP/inventory/product_detail.html#display_content', {'product': product})
     return render(request, 'ERP/inventory/product_detail.html', {'product': product})
 
 def product_edit(request, pk):
-    product = get_object_or_404(Product, pk=pk, owner=request.user)
+    product = get_object_or_404(Product, pk=pk, tenant=request.tenant)
     if request.method == "POST":
         form = CreateProductForm(request.POST, instance=product)
         if form.is_valid():
@@ -43,7 +43,7 @@ def product_edit(request, pk):
 
 @require_http_methods(["POST", "DELETE"])
 def delete_product(request, pk):
-    product = get_object_or_404(Product, pk=pk, owner=request.user)
+    product = get_object_or_404(Product, pk=pk, tenant=request.tenant)
     product.delete()
     #Separate table line delete (htmx delete) from object page delete (form post)
     if request.method == "DELETE":
