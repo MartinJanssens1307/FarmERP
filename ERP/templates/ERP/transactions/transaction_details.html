@@ -14,7 +14,7 @@
     <div class="grid grid-cols-1 md:grid-cols-2 gap-6 bg-white shadow rounded-lg p-6 mb-8">
         <div>
             <h3 class="text-lg font-semibold text-gray-800">Customer</h3>
-            <p class="text-gray-600"><a href="{% url 'customer' transaction.customer.id %}" class="text-blue-600 hover:text-blue-800 underline">{{ transaction.customer }}</a></p>
+            <p class="text-gray-600"><a href="{% url 'customer' transaction.customer.id %}" class="text-green-600 hover:text-green-800 underline">{{ transaction.customer }}</a></p>
         </div>
         <div>
             <h3 class="text-lg font-semibold text-gray-800">Type</h3>
@@ -56,7 +56,7 @@
             {% for item in line_items %}
             <tr>
                 <td class="px-5 py-5 border-b border-gray-200 text-sm">
-                    <p class="text-gray-900 whitespace-no-wrap">{{ item.product }}</p>
+                    <p><a href="{% url 'product_detail' item.product.id %}" class="text-green-600 hover:text-green-800 underline">{{ item.product }}</a></p>
                 </td>
                 <td class="px-5 py-5 border-b border-gray-200 text-sm">
                     <p class="text-gray-900 whitespace-no-wrap">{{ item.quantity }} {{item.product.unit_measure}}</p>
@@ -70,7 +70,6 @@
                 <td class="px-5 py-5 border-b border-gray-200 text-sm">
                     <p class="text-gray-900 whitespace-no-wrap">{{ item.vat_rate_percentage }}%</p>
                 </td>
-
                 <td class="px-5 py-5 border-b border-gray-200 text-sm">
                     <p class="text-gray-900 whitespace-no-wrap">€{{ item.total_gross }}</p>
                 </td>                     

@@ -1,17 +1,64 @@
-<tr id="line-item-{{ form.prefix }}" class="item-row border-b border-gray-200 hover:bg-gray-50">
-    <td class="px-5 py-5 text-sm">
+<tr id="line-item-{{ form.prefix }}" 
+    class="item-row border-b border-gray-200 hover:bg-gray-50"
+    x-data="{ price: 0, qty: 1, vat: 0 }"
+    x-init="
+        price = parseFloat($el.querySelector('input[name$=-unit_price_net]').value) || 0;
+        vat = parseFloat($el.querySelector('input[name$=-vat_rate_percentage]').value) || 0;
+        qty = parseInt($el.querySelector('input[name$=-quantity]').value) || 1;
+        
+        // AUTOMATIC REGISTRATION: Reindex all rows the second this template settles in the DOM
+        if (typeof reindexTransactionRows === 'function') { reindexTransactionRows(); }
+        $dispatch('row-changed');
+    ">
+    
+    <td class="px-5 py-5 text-sm"
+        hx-get="/app/transaction/update_line/" 
+        hx-trigger="change from:find select[name$=-product]" 
+        hx-include="this"
+        hx-swap="none"
+        @htmx:after-request="
+            if ($event.detail.successful) {
+                const data = JSON.parse($event.detail.xhr.responseText);
+                price = data.price;
+                vat = data.vat;
+                
+                const row = $el.closest('tr');
+                row.querySelector('input[name$=-unit_price_net]').value = data.price.toFixed(2);
+                row.querySelector('input[name$=-vat_rate_percentage]').value = data.vat.toFixed(2);
+                
+                const qtyInput = row.querySelector('input[name$=-quantity]');
+                if (qtyInput && !qtyInput.value) {
+                    qtyInput.value = 1;
+                    qty = 1;
+                }
+                $dispatch('row-changed');
+            }
+        ">
         {{ form.product }}
     </td>
-    <td class="px-5 py-5 text-sm">
+
+    <td class="px-5 py-5 text-sm" @input="qty = parseInt($event.target.value) || 1; $dispatch('row-changed');">
         {{ form.quantity }}
     </td>
-    <td class="px-5 py-5 text-sm">
+
+    <td class="px-5 py-5 text-sm" @input="price = parseFloat($event.target.value) || 0; $dispatch('row-changed');">
         {{ form.unit_price_net }}
     </td>
-    <td class="px-5 py-5 text-sm">
+
+    <td class="px-5 py-5 text-sm" @input="vat = parseFloat($event.target.value) || 0; $dispatch('row-changed');">
         {{ form.vat_rate_percentage }}
     </td>
-    <td id="line-total-{{ form.prefix }}" class="px-5 py-5 text-sm font-semibold text-gray-900">
-        €{{ form.instance.total_gross|default:"0.00" }}
+
+    <td class="px-5 py-5 text-sm font-semibold text-gray-900">
+        €<span class="line-total-display" x-text="(price * qty * (1 + vat / 100)).toFixed(2)">0.00</span>
+    </td>
+    
+    <td class="px-5 py-5 text-sm text-right">
+        <button type="button" class="text-red-500 hover:text-red-700 p-1 rounded transition" 
+                @click="$el.closest('tr').remove(); reindexTransactionRows(); $dispatch('row-changed');">
+            <svg class="w-5 h-5 inline" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+            </svg>
+        </button>
     </td>
 </tr>

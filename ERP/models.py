@@ -121,6 +121,7 @@ class Product(models.Model):
     description = models.TextField(max_length=250)
     unit_measure = models.CharField(max_length=3, choices=[("kg", "Kg"), ("l", "L"), ("t", "Ton"), ("u", "Unit"), ("h", "Hour"),("a", "Are"),("ha", "Hectare")])
     unit_price = models.DecimalField(max_digits=10, decimal_places=2)
+    vat_rate = models.IntegerField(max_length=3, blank=True)
     type = models.CharField(max_length=3, choices=[("o", "Object"), ("s", "Service")], default='o')
     tenant = models.ForeignKey(Company, on_delete=models.CASCADE, related_name='products')
 
@@ -243,7 +244,7 @@ class TransactionLineItem(models.Model):
         self.total_net = self.quantity * self.unit_price_net
         self.total_vat = self.total_net * (self.vat_rate_percentage / 100)
         self.total_gross = self.total_net + self.total_vat
-        if self.transaction.status == 'completed' and self.product and not self.product_name_snapshot:
+        if self.transaction.status == 'completed' and self.product and not self.product_name_snap:
             self.product_name_snap = self.product
         super().save(*args, **kwargs)
 

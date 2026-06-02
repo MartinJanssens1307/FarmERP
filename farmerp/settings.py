@@ -91,7 +91,8 @@ WSGI_APPLICATION = "farmerp.wsgi.application"
 if 'DATABASE_URL' in os.environ:
     DATABASES = {
         'default': dj_database_url.config(
-            conn_max_age=600
+            conn_max_age=600,
+            ssl_require=True
         )
     }
 else:

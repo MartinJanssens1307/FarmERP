@@ -39,7 +39,7 @@ class CreateAddressForm(TailwindFormMixin, forms.ModelForm):
 class CreateProductForm(TailwindFormMixin, forms.ModelForm):
      class Meta:
           model = Product
-          fields = ('name', 'description', 'unit_measure', 'unit_price', 'type')
+          fields = ('name', 'description', 'unit_measure', 'unit_price', 'type', 'vat_rate')
 
 # Define the form for the individual line item (used by the formset)
 class TransactionLineItemForm(TailwindFormMixin, forms.ModelForm):

@@ -49,3 +49,4 @@ def delete_product(request, pk):
     if request.method == "DELETE":
         return HttpResponse('')
     return redirect('products')
+
