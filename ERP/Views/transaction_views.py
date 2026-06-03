@@ -5,7 +5,7 @@ from django.db import transaction as db_transaction
 
 from ERP.models import Transaction, Product
 from ERP.forms.forms import CreateTransactionForm, TransactionLineItemFormSet, TransactionLineItemForm
-import traceback
+import json
 
 def transaction_list(request):
     transactions = Transaction.objects.filter(tenant=request.tenant).order_by('-creation_date')
@@ -25,6 +25,7 @@ def transaction_create(request):
             with db_transaction.atomic():
                 transaction = form.save(commit=False)
                 transaction.tenant = request.tenant
+                transaction.created_by=request.user
                 transaction.save()
                
                 formset.instance = transaction
@@ -84,7 +85,21 @@ def transaction_print(request, pk):
     return render(request, 'ERP/transactions/transaction_print.html', context)
 
 def transaction_validate(request, pk):
-    transaction = get_object_or_404(Transaction, id=pk)
+    transaction = get_object_or_404(Transaction, id=pk, tenant=request.tenant)
+    
+    validation_errors = transaction.get_validation_errors()
+    
+    if validation_errors:
+        response = render(request, 'ERP/transactions/transaction_details.html#transaction_actions', {
+        'transaction': transaction})
+        # On déclenche un événement personnalisé 'transaction-errors' avec les données JSON
+        response['HX-Trigger'] = json.dumps({
+            "transaction-errors": {
+                "errors": validation_errors
+            }
+        })
+        return response
+
     transaction.validate_and_freeze()
     response = render(request, 'ERP/transactions/transaction_details.html#transaction_actions', {
         'transaction': transaction
@@ -113,8 +128,8 @@ def update_line(request):
     try:
         product = Product.objects.get(pk=product_id)
         return JsonResponse({
-            'price': float(product.unit_price),
-            'vat': float(product.vat_rate)
+            'price': float(product.unit_price) if product.unit_price is not None else 0.00,
+            'vat': float(product.vat_rate) if product.vat_rate is not None else 0.00
         })
-    except Product.DoesNotExist:
+    except (Product.DoesNotExist):
         return JsonResponse({'price': 0.00, 'vat': 0.00})

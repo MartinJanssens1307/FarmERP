@@ -27,7 +27,7 @@ def address_create(request, pk):
     return render(request, 'ERP/address/address_detail.html#address_row_form', context)
 
 def address_edit(request, pk):
-    address = get_object_or_404(Address, pk=pk, partner__owner=request.user)
+    address = get_object_or_404(Address, pk=pk, partner__tenant=request.tenant)
     if request.method == "POST":
         form = CreateAddressForm(request.POST, instance=address)
         if form.is_valid():
@@ -47,6 +47,6 @@ def get_address_row(request, address_id):
 
 @require_http_methods(["DELETE"])
 def delete_address(request, pk):
-    address = Address.objects.get(pk=pk, partner__owner = request.user)
+    address = Address.objects.get(pk=pk, partner__tenant = request.tenant)
     address.delete()
     return HttpResponse('')

@@ -118,11 +118,11 @@ class Customer(BusinessPartner):
 
 class Product(models.Model):
     name = models.CharField(max_length=64)
-    description = models.TextField(max_length=250)
-    unit_measure = models.CharField(max_length=3, choices=[("kg", "Kg"), ("l", "L"), ("t", "Ton"), ("u", "Unit"), ("h", "Hour"),("a", "Are"),("ha", "Hectare")])
-    unit_price = models.DecimalField(max_digits=10, decimal_places=2)
-    vat_rate = models.IntegerField(max_length=3, blank=True)
-    type = models.CharField(max_length=3, choices=[("o", "Object"), ("s", "Service")], default='o')
+    description = models.TextField(max_length=250, blank=True)
+    unit_measure = models.CharField(max_length=3, blank=True, null=True, choices=[("kg", "Kg"), ("l", "L"), ("t", "Ton"), ("u", "Unit"), ("h", "Hour"),("a", "Are"),("ha", "Hectare")])
+    unit_price = models.DecimalField(max_digits=10, decimal_places=2, blank=True, null=True)
+    vat_rate = models.IntegerField(blank=True, null=True)
+    type = models.CharField(max_length=3, blank=True, null=True, choices=[("o", "Object"), ("s", "Service")], default='o')
     tenant = models.ForeignKey(Company, on_delete=models.CASCADE, related_name='products')
 
     def __str__(self):
@@ -164,13 +164,45 @@ class Transaction(models.Model):
             'vat': totals['vat'] or 0
         }
     
+    def get_validation_errors(self):
+        """
+        Vérifie la conformité légale et métier avant le gel.
+        Renvoie une liste de chaînes de caractères (les erreurs), ou une liste vide si tout est OK.
+        """
+        errors = []
+
+        # 1. Vérification des lignes
+        if not self.line_items.exists():
+            errors.append("The transaction has no item.")
+
+        # 2. Vérification de l'émetteur (Le Tenant)
+        if not self.tenant:
+            errors.append("No transaction sender found.")
+        elif not self.tenant.vat_number:
+            errors.append("You must enter a valid VAT number to validate this transaction.")
+
+        # 3. Vérification du client (Le Destinataire)
+        if not self.customer:
+            errors.append("There's no customer for this transaction")
+        else:
+            # Si le client est une entreprise (B2B Belgique/Europe), la TVA est obligatoire
+            # Note : Adapte 'is_company' selon le nom de ton champ sur ton modèle Customer
+            if not self.customer.vat_number:
+                errors.append(f"The customer '{self.customer.name}' has no VAT number.")
+            
+            # Vérification de l'existence d'une adresse de facturation
+            if not self.customer.get_billing_address():
+                errors.append(f"The customer '{self.customer.name}' has no billing address.")
+
+        return errors
+
     def validate_and_freeze(self):
         """
         Orchestre la validation complète de la transaction :
         1. Snapshot des lignes (produits, prix, tva)
         2. Séquence comptable et ID public immuable
         3. Snapshot des données client et adresse de facturation
-        4. Snapshot des données company
+        4. Snapshot des données tenant
         5. Passage au statut final
         """
         # Sécurité : Si déjà complétée, on ne fait rien (évite les doubles clics/bugs)
