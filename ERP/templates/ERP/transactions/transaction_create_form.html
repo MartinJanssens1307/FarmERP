@@ -66,7 +66,11 @@
                  x-data="{ grandTotal: '0.00' }" 
                  @row-changed.window="$nextTick(() => { 
                     let sum = 0; 
-                    document.querySelectorAll('.line-total-display').forEach(el => sum += parseFloat(el.textContent) || 0); 
+                    document.querySelectorAll('.line-total-display').forEach(el => {
+                        // Strip out everything except numbers and dots
+                        let cleanText = el.textContent.replace(/[^0-9.]/g, ''); 
+                        sum += parseFloat(cleanText) || 0;
+                    }); 
                     grandTotal = sum.toFixed(2); 
                  })">
                 Total: €<span x-text="grandTotal">0.00</span>

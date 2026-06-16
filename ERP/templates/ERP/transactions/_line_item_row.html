@@ -4,7 +4,7 @@
     x-init="
         price = parseFloat($el.querySelector('input[name$=-unit_price_net]').value) || 0;
         vat = parseFloat($el.querySelector('input[name$=-vat_rate_percentage]').value) || 0;
-        qty = parseInt($el.querySelector('input[name$=-quantity]').value) || 1;
+        qty = parseFloat($el.querySelector('input[name$=-quantity]').value) || 1;
         
         // AUTOMATIC REGISTRATION: Reindex all rows the second this template settles in the DOM
         if (typeof reindexTransactionRows === 'function') { reindexTransactionRows(); }
@@ -37,7 +37,7 @@
         {{ form.product }}
     </td>
 
-    <td class="px-5 py-5 text-sm" @input="qty = parseInt($event.target.value) || 1; $dispatch('row-changed');">
+    <td class="px-5 py-5 text-sm" @input="qty = parseFloat($event.target.value) || 1; $dispatch('row-changed');">
         {{ form.quantity }}
     </td>
 
