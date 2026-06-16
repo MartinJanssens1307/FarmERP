@@ -8,6 +8,7 @@ CountryList = [("be", "Belgium"),("fr", "France"),("nl","Netherlands"),("de","Ge
 # Create your models here.
 class Company(models.Model):
     name = models.CharField(max_length=255)
+    legal_form = models.CharField(max_length=64, blank=True, null=True, choices=[('IN', 'Entreprise Individuelle'), ('SRL', 'Société à Responsabilité limitée'), ('SCN', 'Société en Nom Collectif'), ('SC', 'Société Coopérative')], default='IN')
     vat_number = models.CharField(max_length=32, blank=True, null=True)
 # Legal address
     street = models.CharField(max_length=255, blank=True)
@@ -99,7 +100,9 @@ class CompanyAccess(models.Model):
         
 class Customer(BusinessPartner):
     vat_number = models.CharField(max_length=32, blank=True)
-    
+    peppol_status = models.CharField(max_length=20, choices=[('UN', 'Not Verified'), ('ACT', 'Available'), ('IN', 'Not Found')], default='UN')
+    last_peppol_check = models.DateTimeField(null=True, blank=True)
+
     def __str__(self):
         return f"{self.first_name} {self.name}"
     
@@ -116,6 +119,13 @@ class Customer(BusinessPartner):
         return (self.addresses.filter(is_shipping_default=True).first() or 
                 self.addresses.filter(is_shipping=True).first())
 
+    def get_peppol_scheme_format(self):
+        """Formate le numéro de TVA pour la Sandbox Flowin (EAS scheme 9925 pour la Belgique)"""
+        clean_vat = self.vat_number.replace(".", "").replace(" ", "").upper()
+        if not clean_vat.startswith("BE"):
+            clean_vat = f"BE{clean_vat}"
+        return f"9925:{clean_vat}"
+    
 class Product(models.Model):
     name = models.CharField(max_length=64)
     description = models.TextField(max_length=250, blank=True)
@@ -246,6 +256,7 @@ class Transaction(models.Model):
             if self.tenant:
                 self.issuer_snapshot = {
                 "name": self.tenant.name,
+                "legal_form": self.tenant.get_legal_form_display(),
                 "vat_number": self.tenant.vat_number,
                 "address1": f"{self.tenant.street}, {self.tenant.number}",
                 "address2": f"{self.tenant.postal_code} {self.tenant.city}",

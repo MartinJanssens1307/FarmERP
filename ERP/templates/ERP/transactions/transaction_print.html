@@ -33,7 +33,7 @@
             <p class="text-gray-600 mt-1">{{transaction.public_id}}</p>
         </div>
         <div class="text-right text-gray-800">
-            <h2 class="text-xl font-bold">{{ issuer.name }}</h2>
+            <h2 class="text-xl font-bold">{{ issuer.name }} </h2>{{ issuer.legal_form }}
             <p>{{ issuer.address1 }}</p>
             <p>{{ issuer.address2 }}</p>
             <p>{{ issuer.address3 }}</p>
@@ -63,6 +63,7 @@
                     <th class="px-4 py-3 text-left text-xs font-bold uppercase">Product</th>
                     <th class="px-4 py-3 text-center text-xs font-bold uppercase">Qty</th>
                     <th class="px-4 py-3 text-right text-xs font-bold uppercase">Unit Price</th>
+                    <th class="px-4 py-3 text-right text-xs font-bold uppercase">Total Net</th>
                     <th class="px-4 py-3 text-right text-xs font-bold uppercase">VAT</th>
                     <th class="px-4 py-3 text-right text-xs font-bold uppercase">Total Gross</th>
                 </tr>
@@ -73,6 +74,7 @@
                     <td class="px-4 py-4 text-sm font-medium">{{ item.product_name_snap }}</td>
                     <td class="px-4 py-4 text-sm text-center">{{ item.quantity }}</td>
                     <td class="px-4 py-4 text-sm text-right">€{{ item.unit_price_net }}</td>
+                    <td class="px-4 py-4 text-sm text-right">€{{ item.total_net }}</td>
                     <td class="px-4 py-4 text-sm text-right">{{ item.vat_rate_percentage }}%</td>
                     <td class="px-4 py-4 text-sm text-right font-semibold">€{{ item.total_gross }}</td>
                 </tr>
@@ -99,9 +101,9 @@
     </div>
 
     <div class="mt-24 pt-8 border-t border-gray-200 text-center text-xs text-gray-400">
-        <p class="mb-1">Payment via Bank Transfer to: <strong>BE86 1030 1081 3750</strong></p>
+        <p class="mb-1">Payment via Bank Transfer to: <strong>XXX</strong></p>
         <p>Please use <strong>{{ transaction.public_id }}</strong> as payment reference.</p>
-        <p class="mt-4 italic">Thank you for choosing FarmERP. We appreciate your partnership!</p>
+        <p class="mt-4 italic">Thank you for choosing AgriCore. We appreciate your partnership!</p>
     </div>
 </div>
 {% endblock %}

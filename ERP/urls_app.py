@@ -6,10 +6,11 @@ urlpatterns=[
 
 # --- Customer paths ---
     path("customers", customer_views.customer_list, name="customers"),
-    path("create_customer", customer_views.customer_create, name="create_customer"),
+    path("customer/create", customer_views.customer_create, name="create_customer"),
     path("customer/<int:pk>", customer_views.customer_details, name="customer"),
     path("customer/<int:pk>/edit", customer_views.customer_edit, name="customer_edit"),
     path("customer/delete/<int:pk>", customer_views.delete_customer, name="delete_customer"),
+    path("customer/<int:pk>/verify_peppol", customer_views.verify_customer_peppol_status, name='verify_peppol'),
 # --- Address URLs ---  
     path("addresses/<int:customer_id>", address_views.address_list, name="addresses"),
     path("address/create/<int:pk>", address_views.address_create, name="create_address"),

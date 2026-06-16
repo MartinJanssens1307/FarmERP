@@ -1,11 +1,11 @@
 from django.http import HttpResponse
 from django.shortcuts import redirect, render, get_object_or_404
+from django.utils import timezone
 from django.views.decorators.http import require_http_methods
-
-from .utils import get_current_company
 
 from ERP.models import Customer
 from ERP.forms.forms import CreateCustomerForm
+from ERP.services_peppol import check_peppol_customer
  
 def customer_list(request):
     customers = Customer.objects.filter(tenant=request.tenant)
@@ -48,3 +48,22 @@ def delete_customer(request, pk):
     customer = get_object_or_404(Customer, pk=pk, tenant=request.tenant)
     customer.delete()
     return HttpResponse('')
+
+def verify_customer_peppol_status(request, pk):
+    """Vue dédiée HTMX pour vérifier et mettre à jour le statut Peppol d'un client"""
+    customer = get_object_or_404(Customer, id=pk, tenant=request.tenant)
+    
+    # Appel à notre service validé
+    peppol_identifier = customer.get_peppol_scheme_format()
+    result = check_peppol_customer(peppol_identifier)
+    
+    if result.get("success"):
+        customer.peppol_status = 'ACT'
+    else:
+        customer.peppol_status = 'IN'
+        
+    customer.last_peppol_check = timezone.now()
+    customer.save()
+    
+    # On renvoie uniquement le fragment de template du badge
+    return render(request, "ERP/Customer/customer_detail.html#peppol_badge", {"customer": customer})

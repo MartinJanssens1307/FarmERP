@@ -39,6 +39,34 @@
                 <h3 class="text-lg font-semibold text-gray-800">TVA</h3>
                 <p class="text-gray-600">{{ customer.vat_number }}</p>
             </div>
+            {% partialdef peppol_badge inline %}
+            <div id="peppol-status-container">
+                <div class="flex items-center mt-2">
+                    <h3 class="text-lg font-semibold text-gray-800">Peppol Status</h3>
+                    <button hx-post="{% url 'verify_peppol' customer.id %}"
+                                hx-target="#peppol-status-container"
+                                hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}'
+                                hx-swap="outerHTML"
+                                class="group inline-flex items-center justify-center p-2 text-green-800 hover:text-green-600 bg-transparent rounded-md transition-colors focus:outline-none focus:ring-0"
+                                title="Vérifier sur le réseau Peppol">
+                            <svg class="inline-block w-5 h-5 transition-transform duration-500 ease-in-out group-hover:rotate-180 group-[.htmx-request]:animate-spin" 
+                                viewBox="0 0 24 24" 
+                                fill="none" 
+                                stroke="currentColor" 
+                                stroke-width="2.5" 
+                                stroke-linecap="round" 
+                                stroke-linejoin="round">
+                                <path d="M3 12a9 9 0 0 1 15-6.7L21 8" />
+                                <path d="M21 3v5h-5" />
+                                
+                                <path d="M21 12a9 9 0 0 1-15 6.7L3 16" />
+                                <path d="M3 21v-5h5" />
+                            </svg>
+                    </button>
+                </div>
+                    <p class="text-gray-600 mb-0">{{ customer.get_peppol_status_display }}</p>               
+            </div>
+            {% endpartialdef %}
         </div>
         <div class="flex items-center justify-center mt-6">
             <button class="bg-yellow-800 hover:bg-amber-950 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline transition duration-300 mr-2"
@@ -78,7 +106,7 @@
             </button>
         </div>
     </form>
-        {% endpartialdef %}
+    {% endpartialdef %}
     </div>
     <h2 class="text-2xl font-semibold leading-tight text-gray-800 mb-6">Customer Details</h2>
     <section class="bg-white shadow rounded-lg overflow-hidden">

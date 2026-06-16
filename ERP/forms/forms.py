@@ -13,7 +13,7 @@ class RegistrationForm(TailwindFormMixin, UserCreationForm):
 class CreateCompanyForm(TailwindFormMixin, forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.fields["vat_number"].widget.attrs.update({"placeholder": "Ex: BE 123.456.789"})
+        self.fields["vat_number"].widget.attrs.update({"placeholder": "Ex: BE123456789"})
     class Meta:
         model = Company
         exclude = ['users']
