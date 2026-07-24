@@ -18,7 +18,7 @@
 "postCreateCommand": "pip3 install -r requirements.txt && python manage.py migrate && rm -rf node_modules && npm install",
 
   // Keep this. It runs every time the container is opened (starts the server).
-"postAttachCommand": "python manage.py runserver 0.0.0.0:8000",
+"postAttachCommand": "python manage.py runserver 0.0.0.0:8000"
   
 
 	// Configure tool-specific properties.

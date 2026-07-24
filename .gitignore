@@ -2,6 +2,9 @@
 __pycache__/
 *.pyc
 db.sqlite3
+.venv/
+staticfiles/
+.devcontainer/devcontainer-lock.json
 
 # JavaScript / Tailwind bits (This is the important part!)
 node_modules/
