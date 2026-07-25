@@ -3,10 +3,6 @@
 /* v4: This single import loads the theme, base styles, and utilities */
 @import "tailwindcss";
 
-@source "../../../templates/**/*.html";
-@source "../../../**/templates/**/*.html";
-@source "../../../**/*.py";
-
 /*
    In v4, we use @layer components to ensure these custom classes
    interact correctly with Tailwind's built-in styles.

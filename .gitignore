@@ -13,3 +13,6 @@ dist/
 
 # Environment variables
 .env
+
+# Fichier CSS compilé par Tailwind (généré au build/dev)
+**/static/css/output.css

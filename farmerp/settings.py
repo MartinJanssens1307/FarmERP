@@ -29,10 +29,10 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = "django-insecure-$1r@13ny-cvfp)q$p)5pzabyq&#^1+19do7lb3no@ddf_+24#y"
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = os.environ.get('DEBUG', 'True') == 'True'
-
+# Accepte '1', 'true', 't', 'yes' comme valeur Vraie pour DEBUG
+DEBUG = os.environ.get('DEBUG', 'True').lower() in ('true', '1', 't', 'yes')
 if DEBUG:
-    ALLOWED_HOSTS = ['localhost', '127.0.0.1', '[::1]']
+    ALLOWED_HOSTS = ['*']
 else:
     # Get this from your Render environment variable
     ALLOWED_HOSTS = [
@@ -88,18 +88,22 @@ WSGI_APPLICATION = "farmerp.wsgi.application"
 # Database
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 
+# Conditionne le SSL uniquement si DEBUG est à False (en Production)
+IS_PRODUCTION = not os.environ.get('DEBUG', 'True').lower() in ('true', '1', 't')
+
 if 'DATABASE_URL' in os.environ:
     DATABASES = {
         'default': dj_database_url.config(
             conn_max_age=600,
-            ssl_require=True
+            ssl_require=IS_PRODUCTION  # False en local, True en prod
         )
     }
 else:
+    # Fallback SQLite au cas où vous lanciez manage.py hors de Docker
     DATABASES = {
         'default': {
             'ENGINE': 'django.db.backends.sqlite3',
-            'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
+            'NAME': BASE_DIR / 'db.sqlite3',
         }
     }
 

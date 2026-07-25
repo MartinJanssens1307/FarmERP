@@ -3,6 +3,9 @@ set -o errexit
 
 pip install -r requirements.txt
 
+npm install
+npm run css:build
+
 python manage.py collectstatic --no-input
 
 #removed makemigrations as migration files are generated in dev and pushed to repo

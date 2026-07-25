@@ -4,8 +4,8 @@
   "description": "ERP Farm Management Application",
   "main": "index.js",
   "scripts": {
-    "css:build": "npx @tailwindcss/cli build -i ERP/static/src/input.css -o ERP/static/css/styles.css",
-    "css:watch": "bash -c 'last=\"\"; while true; do current=$(find ERP -name \"*.html\" -o -name \"*.py\" -o -path \"*/static/src/input.css\" | xargs stat -c \"%Y %n\" | sort | md5sum); if [ \"$current\" != \"$last\" ]; then echo \"Change detected, rebuilding...\"; npm run css:build && echo \"CSS rebuilt at $(date)\"; last=\"$current\"; fi; sleep 1; done'"
+    "css:build": "npx @tailwindcss/cli build -i ERP/static/src/input.css -o ERP/static/css/output.css",
+    "css:watch": "tailwindcss -i ./ERP/static/src/input.css -o ./ERP/static/css/output.css --watch"
   },
   "keywords": [
     "django",
@@ -22,5 +22,8 @@
   },
   "devDependencies": {
     "chokidar-cli": "^3.0.0"
+  },
+  "allowScripts": {
+    "@parcel/watcher": true
   }
 }
