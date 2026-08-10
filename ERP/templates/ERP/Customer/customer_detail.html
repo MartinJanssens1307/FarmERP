@@ -121,11 +121,9 @@
                     class="px-6 py-3 text-gray-700 hover:text-cyan-600">
                 Transactions
             </button>
-            <button hx-get="{% url 'index' %}" 
-                    hx-target="#details-content"
-                    class="px-6 py-3 text-gray-700 hover:text-cyan-600">
+            <a href="{% url 'crops' %}" class="px-6 py-3 text-gray-700 hover:text-cyan-600">
                 Fields
-            </button>
+            </a>
         </nav>
     </section>
     <div id="customer-details-container">

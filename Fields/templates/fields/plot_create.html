@@ -1,0 +1,239 @@
+{% extends "ERP/layout.html" %}
+
+{% block head %}
+<title>AgriCore - Fields</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<link rel="stylesheet" href="https://unpkg.com/@geoman-io/leaflet-geoman-free@2.14.2/dist/leaflet-geoman.css" />
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+<script defer src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script defer src="https://unpkg.com/@geoman-io/leaflet-geoman-free@2.14.2/dist/leaflet-geoman.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/@turf/turf@6/turf.min.js"></script>
+{% endblock %}
+
+{% block body %}
+<div class="container mx-auto px-4 sm:px-8 max-w-5xl my-12" x-data="mapPicker()" x-init="initMap()">
+    <div class="bg-white p-6 rounded-xl shadow-md space-y-4">
+        <h2 class="text-2xl font-bold text-gray-800">Create Parcel</h2>
+
+        <form action="{% url 'plot_create' %}" method="post" class="space-y-4">
+            {% csrf_token %}
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 items-center">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Name</label>
+                    <input type="text" name="name" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500" placeholder="ex: Champ du Moulin">
+                </div>
+
+                <div class="bg-gray-50 p-3 rounded-lg border">
+                    <span class="text-xs text-gray-500 block uppercase font-semibold">Surface SIG dessinée</span>
+                    <span class="text-base font-bold text-gray-700" x-text="surface ? surface + ' ha' : '0 ha'"></span>
+                </div>
+
+                <div class="bg-green-50 p-3 rounded-lg border border-green-200">
+                    <label class="block text-xs font-semibold uppercase text-green-800">Surface Cadastrale (Clic SPW)</label>
+                    <input type="number" step="0.0001" name="official_surface_ha" x-model="officialSurface" class="mt-1 block w-full rounded border-gray-300 text-sm font-bold text-green-700 focus:ring-green-500" placeholder="Cliquez sur le cadastre">
+                </div>
+            </div>
+
+            <div>
+                <label class="block text-xs font-semibold uppercase text-gray-500 mb-2">Élément à tracer / placer sur la carte :</label>
+                <div class="flex flex-wrap gap-6">
+                    <template x-for="(cat, key) in categories" :key="key">
+                        <button type="button"
+                                @click="setCategory(key)"
+                                :class="activeCategory === key ? 'ring-2 ring-offset-2 ring-indigo-500 font-bold shadow' : 'opacity-70 hover:opacity-100'"
+                                class="flex items-center space-x-2 px-3 py-1.5 rounded-lg text-xs text-white transition"
+                                :style="`background-color: ${cat.color}`">
+                            <i :class="`fa-solid ${cat.icon}`"></i>
+                            <span x-text="cat.label"></span>
+                        </button>
+                    </template>
+                </div>
+            </div>
+
+            <input type="hidden" name="geojson_data" :value="geojson">
+            <input type="hidden" name="surface_ha" :value="surface">
+            <input type="hidden" name="capakey" :value="capakey">
+
+            <div>
+                <div id="map" class="h-[600px] w-full rounded-lg border shadow-inner" style="min-height: 500px;"></div>
+            </div>
+
+            <button type="submit"
+                    :disabled="!geojson"
+                    class="w-full py-2.5 px-4 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-lg shadow disabled:opacity-50 transition">
+                Enregistrer l'élément sur l'exploitation
+            </button>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function mapPicker() {
+    const cadastreTileTemplate = "{% url 'cadastre_proxy' 0 0 0 %}".replace('/0/0/0/', '/{z}/{x}/{y}/');
+    const cadastreIdentifyUrl = "{% url 'cadastre_identify' %}";
+
+    return {
+        map: null,
+        geojson: '',
+        surface: 0,
+        officialSurface: '',
+        capakey: '',
+        activeCategory: 'field',
+
+        categories: {
+            field: { label: 'Zone de culture', color: '#16a34a', isPrimaryArea: true, icon: 'fa-wheat-awn' },
+            pasture: { label: 'Prairie / Pâture', color: '#84cc16', isPrimaryArea: true, icon: 'fa-cow' },
+            subzone: { label: 'Sous-zone / Essai', color: '#eab308', isPrimaryArea: false, icon: 'fa-vial' },
+            building: { label: 'Bâtiment / Hangar', color: '#475569', isPrimaryArea: false, icon: 'fa-warehouse' },
+            access: { label: 'Accès / Route', color: '#ea580c', isPrimaryArea: false, icon: 'fa-route' },
+            water: { label: 'Point d\'eau', color: '#0284c7', isPrimaryArea: false, icon: 'fa-droplet' }
+        },
+
+        initMap() {
+            this.$nextTick(() => {
+                const mapContainer = document.getElementById('map');
+                if (!mapContainer) return;
+
+                this.map = L.map('map', { maxZoom: 21 }).setView([50.378, 4.868], 16);
+
+                L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+                    maxNativeZoom: 19,
+                    maxZoom: 21
+                }).addTo(this.map);
+
+                L.tileLayer(cadastreTileTemplate, {
+                    maxNativeZoom: 19,
+                    maxZoom: 21,
+                    opacity: 0.8
+                }).addTo(this.map);
+
+                if (this.map.pm) {
+                    this.map.pm.addControls({
+                        position: 'topleft',
+                        drawPolygon: true,
+                        drawCutPolygon: true,
+                        drawPolyline: true,
+                        drawMarker: true,
+                        editMode: true,
+                        removalMode: true
+                    });
+                    this.applyCategoryStyle();
+                }
+
+                const updateMapData = () => {
+                    const layers = L.PM.Utils.findLayers(this.map);
+                    const featureCollection = { type: 'FeatureCollection', features: [] };
+                    let mainAreaMeters = 0;
+
+                    layers.forEach((layer) => {
+                        const geojsonFeature = layer.toGeoJSON();
+
+                        if (layer.featureProps) {
+                            geojsonFeature.properties = { ...geojsonFeature.properties, ...layer.featureProps };
+                        }
+
+                        featureCollection.features.push(geojsonFeature);
+
+                        if (geojsonFeature.geometry.type === 'Polygon' || geojsonFeature.geometry.type === 'MultiPolygon') {
+                            const isPrimary = layer.featureProps ? layer.featureProps.isPrimaryArea : true;
+                            if (isPrimary) {
+                                mainAreaMeters += turf.area(geojsonFeature);
+                            }
+                        }
+                    });
+
+                    if (featureCollection.features.length > 0) {
+                        this.geojson = JSON.stringify(featureCollection);
+                        this.surface = (mainAreaMeters / 10000).toFixed(4);
+                        if (!this.officialSurface) {
+                            this.officialSurface = this.surface;
+                        }
+                    } else {
+                        this.geojson = '';
+                        this.surface = 0;
+                    }
+                };
+
+                this.map.on('pm:create', (e) => {
+                    const layer = e.layer;
+                    const catConfig = this.categories[this.activeCategory];
+
+                    layer.featureProps = {
+                        category: this.activeCategory,
+                        color: catConfig.color,
+                        icon: catConfig.icon,
+                        label: catConfig.label,
+                        isPrimaryArea: catConfig.isPrimaryArea
+                    };
+
+                    if (e.shape === 'Marker') {
+                        const customIcon = L.divIcon({
+                            className: '',
+                            html: `<div style="background-color: ${catConfig.color}; width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; border: 2px solid white; box-shadow: 0 2px 6px rgba(0,0,0,0.4);"><i class="fa-solid ${catConfig.icon}" style="font-size: 14px;"></i></div>`,
+                            iconSize: [32, 32],
+                            iconAnchor: [16, 16]
+                        });
+                        layer.setIcon(customIcon);
+                    }
+
+                    layer.on('pm:edit', updateMapData);
+                    layer.on('pm:markerdragend', updateMapData);
+                    layer.on('pm:vertexchange', updateMapData);
+                    layer.on('pm:remove', updateMapData);
+
+                    updateMapData();
+                });
+
+                this.map.on('pm:cut', (e) => {
+                    e.layer.on('pm:edit', updateMapData);
+                    e.layer.on('pm:markerdragend', updateMapData);
+                    e.layer.on('pm:vertexchange', updateMapData);
+                    updateMapData();
+                });
+
+                this.map.on('pm:remove', updateMapData);
+
+                this.map.on('click', async (e) => {
+                    const lat = e.latlng.lat;
+                    const lng = e.latlng.lng;
+
+                    try {
+                        const response = await fetch(`${cadastreIdentifyUrl}?lat=${lat}&lng=${lng}`);
+                        if (!response.ok) return;
+
+                        const data = await response.json();
+                        if (data && data.surface_ha !== undefined && data.surface_ha !== null) {
+                            this.officialSurface = Number(data.surface_ha).toFixed(4);
+                            this.capakey = data.capakey || '';
+                        }
+                    } catch (error) {
+                        console.error('Erreur de récupération cadastrale:', error);
+                    }
+                });
+
+                setTimeout(() => this.map.invalidateSize(), 200);
+            });
+        },
+
+        setCategory(catKey) {
+            this.activeCategory = catKey;
+            this.applyCategoryStyle();
+        },
+
+        applyCategoryStyle() {
+            if (!this.map || !this.map.pm) return;
+            const cat = this.categories[this.activeCategory];
+            this.map.pm.setPathOptions({
+                color: cat.color,
+                fillColor: cat.color,
+                fillOpacity: 0.4,
+                weight: 3
+            });
+        }
+    };
+}
+</script>
+{% endblock %}

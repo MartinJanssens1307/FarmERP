@@ -1,0 +1,180 @@
+{% extends "ERP/layout.html" %}
+
+{% block head %}
+    <title>AgriCore - Parcels</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+    <script defer src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+{% endblock %}
+
+
+{% block body %}
+<div class="container mx-auto px-4 sm:px-8 max-w-5xl my-12">
+    <div class="py-8 space-y-6">
+        <div class="flex justify-between items-center mb-6">
+            <h2 class="text-2xl font-semibold leading-tight text-gray-800">Parcels</h2>
+            <a href="{% url 'plot_create' %}" class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline transition duration-300">
+                Create Parcel
+            </a>
+        </div>
+
+        <div class="bg-white rounded-xl shadow-md p-4">
+            <p class="mb-2 text-sm font-semibold uppercase text-gray-500">Map view</p>
+            <div id="parcels-map" class="h-[500px] w-full rounded-lg border shadow-inner" style="min-height: 420px;"></div>
+        </div>
+
+        <div class="-mx-4 sm:-mx-8 px-4 sm:px-8 py-4 overflow-x-auto">
+            <div class="inline-block min-w-full shadow rounded-lg overflow-hidden">
+                <table class="min-w-full leading-normal">
+                    <thead class="bg-gray-800 text-white">
+                        <tr>
+                            <th class="px-5 py-3 border-b-2 border-gray-200 text-left text-xs font-semibold uppercase tracking-wider">
+                                Name
+                            </th>
+                            <th class="px-5 py-3 border-b-2 border-gray-200 text-left text-xs font-semibold uppercase tracking-wider">
+                                Capakey
+                            </th>
+                            <th class="px-5 py-3 border-b-2 border-gray-200 text-left text-xs font-semibold uppercase tracking-wider">
+                                Surface
+                            </th>
+                            <th class="px-5 py-3 border-b-2 border-gray-200 text-left text-xs font-semibold uppercase tracking-wider">
+                                Role
+                            </th>
+                            <th class="px-5 py-3 border-b-2 border-gray-200 text-center text-xs font-semibold uppercase tracking-wider">
+                                Actions
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody class="bg-white">
+                        {% for parcel in parcels %}
+                        <tr id="parcel-row-{{ parcel.id }}" class="parcel-row transition" data-parcel-id="{{ parcel.id }}">
+                            <td class="px-5 py-5 border-b border-gray-200 text-sm">
+                                <p class="text-gray-900 whitespace-no-wrap">{{ parcel.name }}</p>
+                            </td>
+                            <td class="px-5 py-5 border-b border-gray-200 text-sm">
+                                <p class="text-gray-900 whitespace-no-wrap">{{ parcel.capakey }}</p>
+                            </td>
+                            <td class="px-5 py-5 border-b border-gray-200 text-sm">
+                                <p class="text-gray-900 whitespace-no-wrap">{{ parcel.surface }}</p>
+                            </td>
+                            <td class="px-5 py-5 border-b border-gray-200 text-sm">
+                                <p class="text-gray-900 whitespace-no-wrap">{{ parcel.official_surface }}</p>
+                            </td>
+                            <td class="px-5 py-5 border-b border-gray-200 text-sm text-center">
+                                <a href="{% url 'parcel_detail' parcel.id %}" class="text-gray-600 hover:text-green-600 mx-2" title="View Details">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 inline-block" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                                    </svg>
+                                </a>
+                                <button hx-delete="{% url 'parcel_delete' parcel.id %}"
+                                    hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}'
+                                    hx-target="closest tr"
+                                    hx-swap="outerHTML"
+                                    hx-confirm="Are you sure you want to delete this parcel?"
+                                    class="text-red-600 hover:text-red-800 mx-2" 
+                                    title="Delete Parcel">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 inline-block" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                    </svg>
+                                </button>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+const parcelData = {{ parcel_data|safe }};
+
+function highlightParcel(parcelId) {
+    document.querySelectorAll('.parcel-row').forEach((row) => {
+        const isActive = row.getAttribute('data-parcel-id') === String(parcelId);
+        row.classList.toggle('bg-emerald-700', isActive);
+        row.classList.toggle('text-white', isActive);
+        row.classList.toggle('font-semibold', isActive);
+        row.classList.toggle('shadow-md', isActive);
+        row.classList.toggle('ring-2', isActive);
+        row.classList.toggle('ring-emerald-200', isActive);
+        row.classList.toggle('bg-white', !isActive);
+    });
+}
+
+document.addEventListener('DOMContentLoaded', function () {
+    const mapContainer = document.getElementById('parcels-map');
+    if (!mapContainer) return;
+
+    const cadastreTileTemplate = "{% url 'cadastre_proxy' 0 0 0 %}".replace('/0/0/0/', '/{z}/{x}/{y}/');
+    const map = L.map('parcels-map', { maxZoom: 21 }).setView([50.378, 4.868], 16);
+
+    L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+        maxNativeZoom: 19,
+        maxZoom: 21
+    }).addTo(map);
+
+    L.tileLayer(cadastreTileTemplate, {
+        maxNativeZoom: 19,
+        maxZoom: 21,
+        opacity: 0.8
+    }).addTo(map);
+
+    const bounds = [];
+
+    parcelData.forEach((parcel) => {
+        const geojson = parcel.geojson || {};
+        if (!geojson.features || !geojson.features.length) return;
+
+        const layer = L.geoJSON(geojson, {
+            style: (feature) => {
+                const props = feature.properties || {};
+                return {
+                    color: props.color || '#16a34a',
+                    fillColor: props.color || '#16a34a',
+                    fillOpacity: 0.25,
+                    weight: 2.5
+                };
+            },
+            pointToLayer: (feature, latlng) => {
+                const props = feature.properties || {};
+                const marker = L.marker(latlng, {
+                    icon: L.divIcon({
+                        className: '',
+                        html: `<div style="background-color:${props.color || '#16a34a'}; width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; border: 3px solid white; box-shadow: 0 0 0 4px rgba(15,23,42,0.18), 0 6px 18px rgba(0,0,0,0.35);"><i class="fa-solid ${props.icon || 'fa-location-dot'}" style="font-size: 16px;"></i></div>`,
+                        iconSize: [40, 40],
+                        iconAnchor: [20, 20]
+                    })
+                });
+
+                marker.on('click', () => highlightParcel(parcel.id));
+                return marker;
+            }
+        }).addTo(map);
+
+        layer.on('click', () => highlightParcel(parcel.id));
+        if (layer.getBounds) {
+            bounds.push(layer.getBounds());
+        }
+    });
+
+    if (bounds.length) {
+        map.fitBounds(L.latLngBounds(bounds), { padding: [24, 24] });
+    }
+
+    document.querySelectorAll('.parcel-row').forEach((row) => {
+        row.addEventListener('click', () => {
+            const parcelId = row.getAttribute('data-parcel-id');
+            highlightParcel(parcelId);
+        });
+    });
+
+    setTimeout(() => map.invalidateSize(), 250);
+    window.addEventListener('load', () => map.invalidateSize());
+});
+</script>
+{% endblock %}

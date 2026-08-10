@@ -288,7 +288,7 @@ class TransactionLineItem(models.Model):
         self.total_vat = self.total_net * (self.vat_rate_percentage / 100)
         self.total_gross = self.total_net + self.total_vat
         if self.transaction.status == 'completed' and self.product and not self.product_name_snap:
-            self.product_name_snap = self.product
+            self.product_name_snap = self.product.name
         super().save(*args, **kwargs)
 
     def __str__(self):

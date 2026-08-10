@@ -28,7 +28,7 @@ class CreateCustomerForm(TailwindFormMixin, forms.ModelForm):
         fields = ('title', 'name', 'first_name', 'phone', 'email', 'vat_number')
         widgets = {
             'email': forms.EmailInput(attrs={'type': 'email'}),
-            'phone_number': forms.TextInput(attrs={'type': 'tel'}),
+            'phone': forms.TextInput(attrs={'type': 'tel'}),
         }
 
 class CreateAddressForm(TailwindFormMixin, forms.ModelForm):

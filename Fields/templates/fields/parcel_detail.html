@@ -1,0 +1,124 @@
+{% extends "ERP/layout.html" %}
+
+{% block head %}
+<title>AgriCore - Parcel Details</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+<script defer src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+{% endblock %}
+
+{% block body %}
+<div class="container mx-auto px-4 sm:px-8 max-w-5xl my-12">
+    <div class="bg-white p-6 rounded-xl shadow-md space-y-6">
+        <div class="flex items-center justify-between gap-4">
+            <div>
+                <h2 class="text-2xl font-bold text-gray-800">{{ parcel.name }}</h2>
+                <p class="text-sm text-gray-500">Parcelle enregistrée</p>
+            </div>
+            <a href="{% url 'parcels' %}" class="inline-flex items-center rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50">
+                <i class="fa-solid fa-arrow-left mr-2"></i> Back to list
+            </a>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div class="rounded-lg border border-gray-200 bg-gray-50 p-4">
+                <p class="text-xs font-semibold uppercase text-gray-500">Name</p>
+                <p class="mt-1 text-lg font-semibold text-gray-800">{{ parcel.name }}</p>
+            </div>
+            <div class="rounded-lg border border-gray-200 bg-gray-50 p-4">
+                <p class="text-xs font-semibold uppercase text-gray-500">Surface SIG</p>
+                <p class="mt-1 text-lg font-semibold text-gray-800">{{ parcel.surface|default:"0" }} ha</p>
+            </div>
+            <div class="rounded-lg border border-gray-200 bg-green-50 p-4">
+                <p class="text-xs font-semibold uppercase text-green-800">Surface cadastrale</p>
+                <p class="mt-1 text-lg font-semibold text-green-700">{{ parcel.official_surface|default:"—" }} ha</p>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div class="rounded-lg border border-gray-200 p-4">
+                <p class="text-xs font-semibold uppercase text-gray-500">Capakey</p>
+                <p class="mt-1 text-base font-medium text-gray-700">{{ parcel.capakey|default:"—" }}</p>
+            </div>
+            <div class="rounded-lg border border-gray-200 p-4">
+                <p class="text-xs font-semibold uppercase text-gray-500">Created</p>
+                <p class="mt-1 text-base font-medium text-gray-700">{{ parcel.created_at }}</p>
+            </div>
+        </div>
+
+        {{ parcel.geojson_data|json_script:"parcel-geojson-data" }}
+
+        <div>
+            <p class="mb-2 text-sm font-semibold uppercase text-gray-500">Preview on map</p>
+            <div id="parcel-map" class="h-[600px] w-full rounded-lg border shadow-inner" style="min-height: 500px;"></div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const mapContainer = document.getElementById('parcel-map');
+    if (!mapContainer) return;
+
+    const cadastreTileTemplate = "{% url 'cadastre_proxy' 0 0 0 %}".replace('/0/0/0/', '/{z}/{x}/{y}/');
+    const map = L.map('parcel-map', { maxZoom: 21 }).setView([50.378, 4.868], 16);
+
+    L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+        maxNativeZoom: 19,
+        maxZoom: 21
+    }).addTo(map);
+
+    L.tileLayer(cadastreTileTemplate, {
+        maxNativeZoom: 19,
+        maxZoom: 21,
+        opacity: 0.8
+    }).addTo(map);
+
+    const geojsonElement = document.getElementById('parcel-geojson-data');
+    let geojson = null;
+
+    if (geojsonElement) {
+        try {
+            geojson = JSON.parse(geojsonElement.textContent || '{}');
+        } catch (error) {
+            console.error('Unable to parse parcel GeoJSON:', error);
+        }
+    }
+
+    if (geojson && geojson.features && geojson.features.length) {
+        const layer = L.geoJSON(geojson, {
+            style: (feature) => {
+                const props = feature.properties || {};
+                return {
+                    color: props.color || '#2563eb',
+                    fillColor: props.color || '#2563eb',
+                    fillOpacity: 0.35,
+                    weight: 2.5
+                };
+            },
+            pointToLayer: (feature, latlng) => {
+                const props = feature.properties || {};
+                const iconClass = props.icon || 'fa-location-dot';
+                return L.marker(latlng, {
+                    icon: L.divIcon({
+                        className: '',
+                        html: `<div style="background-color:${props.color || '#2563eb'}; width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; border: 2px solid white; box-shadow: 0 2px 6px rgba(0,0,0,0.4);"><i class="fa-solid ${iconClass}" style="font-size: 14px;"></i></div>`,
+                        iconSize: [32, 32],
+                        iconAnchor: [16, 16]
+                    })
+                });
+            }
+        }).addTo(map);
+
+        if (layer.getBounds) {
+            map.fitBounds(layer.getBounds(), { padding: [24, 24] });
+        }
+    }
+
+    setTimeout(() => map.invalidateSize(), 250);
+    window.addEventListener('load', () => map.invalidateSize());
+});
+</script>
+{% endblock %}

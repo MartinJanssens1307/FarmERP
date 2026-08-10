@@ -49,6 +49,7 @@ def delete_customer(request, pk):
     customer.delete()
     return HttpResponse('')
 
+@require_http_methods(["POST"])
 def verify_customer_peppol_status(request, pk):
     """Vue dédiée HTMX pour vérifier et mettre à jour le statut Peppol d'un client"""
     customer = get_object_or_404(Customer, id=pk, tenant=request.tenant)

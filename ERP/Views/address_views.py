@@ -42,11 +42,11 @@ def address_edit(request, pk):
     return render(request, 'ERP/address/address_detail.html#address_row_form', context)
 
 def get_address_row(request, address_id):
-    address = get_object_or_404(Address, id=address_id)
+    address = get_object_or_404(Address, id=address_id, partner__tenant=request.tenant)
     return render(request, "ERP/address/address_detail.html#address_line", {"address": address})
 
 @require_http_methods(["DELETE"])
 def delete_address(request, pk):
-    address = Address.objects.get(pk=pk, partner__tenant = request.tenant)
+    address = get_object_or_404(Address, pk=pk, partner__tenant=request.tenant)
     address.delete()
     return HttpResponse('')

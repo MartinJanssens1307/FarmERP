@@ -6,8 +6,7 @@
 
 {% block body %}
 <div class="container mx-auto px-4 sm:px-8 max-w-5xl my-12" 
-     x-data="{ rowsCount: {{ formset.total_form_count }} }"
-     @row-changed.window="$nextTick(() => { rowsCount = document.querySelectorAll('.item-row').length })">
+    x-data>
 
     <h2 class="text-2xl font-bold text-gray-800 mb-6">Create New Transaction</h2>
     
@@ -39,7 +38,7 @@
                             <th class="px-5 py-3 border-b-2 border-gray-200"></th>
                         </tr>
                     </thead>
-                    <tbody id="line-item-tbody" class="bg-white" x-init="$nextTick(() => $dispatch('row-changed'))">
+                    <tbody id="line-item-tbody" class="bg-white">
                         {{ formset.management_form }}
                         {% for form in formset %}
                             {% include 'ERP/transactions/_line_item_row.html' %}                      
@@ -54,8 +53,8 @@
             <div class="flex space-x-3">
                 <button type="button" 
                         class="bg-sky-300 hover:bg-sky-400 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline transition duration-300" 
-                        hx-get="/app/transaction/add-line/" 
-                        hx-vals="js:{new_index: document.querySelectorAll('.item-row').length}" 
+                        hx-get="{% url 'get_line_item' %}" 
+                        hx-vals="js:{new_index: parseInt(document.getElementById('id_line_items-TOTAL_FORMS')?.value || document.querySelectorAll('.item-row').length, 10)}" 
                         hx-target="#new-rows-target" 
                         hx-swap="beforebegin">
                     Add Product
@@ -83,13 +82,16 @@
         </div>
     </form>
 </div>
+{% endblock %}
 
+{% block scripts %}
 <script>
 function reindexTransactionRows() {
     const allRows = document.querySelectorAll('.item-row');
+
     allRows.forEach((row, i) => {
         row.id = 'line-item-line_items-' + i;
-        row.querySelectorAll('input, select, textarea').forEach(el => {
+        row.querySelectorAll('input, select, textarea').forEach((el) => {
             if (el.name) {
                 el.name = el.name.replace(/^[a-zA-Z_0-9]+-\d+/, 'line_items-' + i);
             }
@@ -100,9 +102,19 @@ function reindexTransactionRows() {
     });
 
     const totalInput = document.getElementById('id_line_items-TOTAL_FORMS');
-    if (totalInput) { 
+    if (totalInput) {
         totalInput.value = allRows.length;
     }
+
+    window.dispatchEvent(new CustomEvent('row-changed'));
 }
+
+document.addEventListener('DOMContentLoaded', reindexTransactionRows);
+document.body.addEventListener('htmx:afterSwap', (event) => {
+    const targetId = event.detail?.target?.id;
+    if (targetId === 'new-rows-target' || targetId === 'line-item-tbody') {
+        reindexTransactionRows();
+    }
+});
 </script>
 {% endblock %}

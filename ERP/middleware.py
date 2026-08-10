@@ -8,7 +8,7 @@ class TenantSecurityMiddleware:
         self.get_response = get_response
 
     def __call__(self, request):
-        # Si la requête ne concerne PAS l'application, on laisse passer sans vérification
+        # Zone métier protégée: tout ce qui est sous /app/.
         if not request.path.startswith('/app/'):
             request.tenant = None
             return self.get_response(request)

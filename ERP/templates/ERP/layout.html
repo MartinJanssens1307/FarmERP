@@ -16,7 +16,9 @@
         body {
             font-family: 'Inter', sans-serif;
         }
-        /* Define the class that the Python Mixin applies */
+        [x-cloak] {
+            display: none !important;
+        }
     </style>
 </head>
 <body class="flex flex-col min-h-screen">
@@ -30,14 +32,14 @@
         <div class="flex items-center">
             <h1>{{message}}</h1>
         </div>
-        <button id="mobile-menu-toggle" class="text-gray-700 p-2 md:hidden">
+        <button id="mobile-menu-toggle" class="text-gray-700 p-2 md:hidden" aria-expanded="false" aria-controls="mobile-menu">
             <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path></svg>
         </button>
         <nav class="hidden md:flex space-x-4 items-center">
             <a href="{% url 'index' %}" class="text-gray-700 hover:text-green-600 font-medium">Home</a>
             <a href="#" class="text-gray-700 hover:text-green-600 font-medium">Contact</a>
             {% if user.is_authenticated %}
-            <a href="/admin" class="text-gray-700 hover:text-yellow-500 font-medium">Admin</a>
+            <a href="{% url 'admin:index' %}" class="text-gray-700 hover:text-yellow-500 font-medium">Admin</a>
             <div class="relative inline-block text-left" id="settings-menu-wrapper">
                 <button id="settings-button" type="button" class="text-gray-700 hover:text-green-600 font-medium inline-flex items-center" aria-expanded="false" aria-haspopup="true">
                     Settings
@@ -64,7 +66,7 @@
             <a href="{% url 'index' %}" class="text-gray-700 hover:text-green-600 font-medium w-full block">Home</a>
             <a href="#" class="text-gray-700 hover:text-green-600 font-medium w-full block">Contact</a>
             {% if user.is_authenticated %}
-            <a href="/admin" class="text-gray-700 hover:text-yellow-500 font-medium w-full block">Admin</a>
+            <a href="{% url 'admin:index' %}" class="text-gray-700 hover:text-yellow-500 font-medium w-full block">Admin</a>
             <form method="post" action="{% url 'logout' %}">
                 {% csrf_token %}
                 <button class="text-gray-700 hover:text-red-600 font-medium">Logout</button>
@@ -84,40 +86,42 @@
     </div>
         {% block footer %}
         {% endblock %}
+    {% block scripts %}
+    {% endblock %}
+    <script>
+    document.addEventListener('DOMContentLoaded', () => {
+        // --- MOBILE MENU ---
+        const toggleButton = document.getElementById('mobile-menu-toggle');
+        const mobileMenu = document.getElementById('mobile-menu');
+
+        if (toggleButton && mobileMenu) {
+            toggleButton.addEventListener('click', () => {
+                const isHidden = mobileMenu.classList.toggle('hidden');
+                toggleButton.setAttribute('aria-expanded', String(!isHidden));
+            });
+        }
+
+        // --- SETTINGS DROPDOWN ---
+        const settingsButton = document.getElementById('settings-button');
+        const settingsDropdown = document.getElementById('settings-dropdown');
+        const settingsWrapper = document.getElementById('settings-menu-wrapper');
+
+        if (settingsButton && settingsDropdown && settingsWrapper) {
+            settingsButton.addEventListener('click', (event) => {
+                event.stopPropagation();
+                const isHidden = settingsDropdown.classList.toggle('hidden');
+                settingsButton.setAttribute('aria-expanded', String(!isHidden));
+            });
+
+            // Close settings when clicking outside
+            document.addEventListener('click', (e) => {
+                if (!settingsDropdown.classList.contains('hidden') && !settingsWrapper.contains(e.target)) {
+                    settingsDropdown.classList.add('hidden');
+                    settingsButton.setAttribute('aria-expanded', 'false');
+                }
+            });
+        }
+    });
+    </script>
 </body>
-<script>
-document.addEventListener('DOMContentLoaded', () => {
-    // --- MOBILE MENU ---
-    const toggleButton = document.getElementById('mobile-menu-toggle');
-    const mobileMenu = document.getElementById('mobile-menu');
-
-    if (toggleButton && mobileMenu) {
-        toggleButton.addEventListener('click', () => {
-            const isHidden = mobileMenu.classList.toggle('hidden');
-            toggleButton.setAttribute('aria-expanded', String(!isHidden));
-        });
-    }
-
-    // --- SETTINGS DROPDOWN ---
-    const settingsButton = document.getElementById('settings-button');
-    const settingsDropdown = document.getElementById('settings-dropdown');
-    const settingsWrapper = document.getElementById('settings-menu-wrapper');
-
-    if (settingsButton && settingsDropdown && settingsWrapper) {
-        settingsButton.addEventListener('click', (event) => {
-            event.stopPropagation();
-            const isHidden = settingsDropdown.classList.toggle('hidden');
-            settingsButton.setAttribute('aria-expanded', String(!isHidden));
-        });
-
-        // Close settings when clicking outside
-        document.addEventListener('click', (e) => {
-            if (!settingsDropdown.classList.contains('hidden') && !settingsWrapper.contains(e.target)) {
-                settingsDropdown.classList.add('hidden');
-                settingsButton.setAttribute('aria-expanded', 'false');
-            }
-        });
-    }
-});
-</script>
 </html>

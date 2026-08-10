@@ -14,6 +14,7 @@ from pathlib import Path
 
 import dj_database_url
 import os
+from django.core.exceptions import ImproperlyConfigured
 
 from django.urls import reverse_lazy
 
@@ -25,26 +26,31 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
 
-# SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = "django-insecure-$1r@13ny-cvfp)q$p)5pzabyq&#^1+19do7lb3no@ddf_+24#y"
-
 # SECURITY WARNING: don't run with debug turned on in production!
-# Accepte '1', 'true', 't', 'yes' comme valeur Vraie pour DEBUG
-DEBUG = os.environ.get('DEBUG', 'True').lower() in ('true', '1', 't', 'yes')
+# Accepte '1', 'true', 't', 'yes' comme valeur vraie pour DEBUG
+DEBUG = os.environ.get('DEBUG', 'False').lower() in ('true', '1', 't', 'yes')
+
+# SECURITY WARNING: keep the secret key used in production secret!
+SECRET_KEY = os.environ.get('SECRET_KEY')
+if not SECRET_KEY:
+    if DEBUG:
+        SECRET_KEY = 'dev-only-secret-key-change-me'
+    else:
+        raise ImproperlyConfigured('SECRET_KEY must be set when DEBUG is False.')
+
 if DEBUG:
-    ALLOWED_HOSTS = ['*']
+    raw_hosts = os.environ.get('ALLOWED_HOSTS', '127.0.0.1,localhost,0.0.0.0,[::1]')
+    ALLOWED_HOSTS = [h.strip() for h in raw_hosts.split(',') if h.strip()]
 else:
-    # Get this from your Render environment variable
-    ALLOWED_HOSTS = [
-    os.environ.get('ALLOWED_HOSTS'),
-    'agricore.be', 
-    'www.agricore.be',
-    ]
+    raw_hosts = os.environ.get('ALLOWED_HOSTS', '')
+    ALLOWED_HOSTS = [h.strip() for h in raw_hosts.split(',') if h.strip()]
+    ALLOWED_HOSTS.extend(['agricore.be', 'www.agricore.be'])
 
 # Application definition
 
 INSTALLED_APPS = [
     "ERP",
+    "Fields",
     "django.contrib.admin",
     "django.contrib.auth",
     "django.contrib.contenttypes",

@@ -45,12 +45,16 @@ def transaction_create(request):
     return render(request, 'ERP/transactions/transaction_create_form.html', {'form': form, 'formset': formset})
 
 def transaction_details(request, pk):
-    transaction = get_object_or_404(Transaction.objects.prefetch_related('line_items'), pk=pk)
+    transaction = get_object_or_404(
+        Transaction.objects.prefetch_related('line_items__product'),
+        pk=pk,
+        tenant=request.tenant,
+    )
     return render(request, 'ERP/transactions/transaction_details.html', {'transaction':transaction, 'line_items':transaction.line_items.all()})
 
 @require_http_methods(["POST", "DELETE"])
 def transaction_delete(request, pk):
-    transaction = get_object_or_404(Transaction, id=pk)
+    transaction = get_object_or_404(Transaction, id=pk, tenant=request.tenant)
     if transaction.status != 'completed':  
         transaction.delete()
         return HttpResponse('')
@@ -75,7 +79,11 @@ def transactions_partial(request, customer_id):
     return render(request, 'ERP/transactions/transaction_list.html#transaction_list', {'transaction_list':transactions})
 
 def transaction_print(request, pk):
-    transaction=get_object_or_404(Transaction.objects.prefetch_related('line_items'), pk=pk)
+    transaction = get_object_or_404(
+        Transaction.objects.prefetch_related('line_items__product'),
+        pk=pk,
+        tenant=request.tenant,
+    )
     context={
         'transaction': transaction,
         'line_items': transaction.line_items.all(),
@@ -84,6 +92,7 @@ def transaction_print(request, pk):
     }
     return render(request, 'ERP/transactions/transaction_print.html', context)
 
+@require_http_methods(["POST"])
 def transaction_validate(request, pk):
     transaction = get_object_or_404(Transaction, id=pk, tenant=request.tenant)
     
@@ -108,6 +117,7 @@ def transaction_validate(request, pk):
     response['HX-Trigger'] = 'transaction-updated'
     return response
 
+@require_http_methods(["GET"])
 def update_line(request):
     """
     API endpoint that returns a product's base price and VAT rate as JSON.
@@ -126,7 +136,7 @@ def update_line(request):
         return JsonResponse({'price': 0.00, 'vat': 0.00})
         
     try:
-        product = Product.objects.get(pk=product_id)
+        product = Product.objects.get(pk=product_id, tenant=request.tenant)
         return JsonResponse({
             'price': float(product.unit_price) if product.unit_price is not None else 0.00,
             'vat': float(product.vat_rate) if product.vat_rate is not None else 0.00

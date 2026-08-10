@@ -1,4 +1,5 @@
 {% extends "ERP/layout.html" %}
+{% load static %}
 
 {% block head %}
     <title>AgriCore - Homepage</title>
@@ -10,9 +11,9 @@
     <h1 class="text-5xl font-bold text-center mb-10 text-green-800">Key Features</h1>
     <div class="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-6xl mx-auto">
         <div class="bg-white p-6 rounded-lg shadow-lg hover:shadow-xl transition duration-300 border border-gray-200">
-            <a href="{% url 'crops' %}">
+            <a href="{% url 'parcels' %}">
             <div class="flex items-center justify-center mb-4 mx-auto">
-                <img src="static/Crop management.png" alt="Crop Management Icon">
+                <img src="{% static 'Crop management.png' %}" alt="Crop Management Icon">
             </div>
             <h4 class="text-xl font-semibold text-green-700 mb-3 text-center">Crop Management</h4>
             <p class="text-gray-600 text-center">Plan, track, and optimize your crop cycles from planting to harvest with ease. (In construction)</p>
@@ -21,7 +22,7 @@
         <div class="bg-white p-6 rounded-lg shadow-lg hover:shadow-xl transition duration-300 border border-gray-200">
             <a href="{% url 'customers' %}">
             <div class="flex items-center justify-center mb-4 mx-auto">
-                <img src="static/Customers management.png" alt="Customers Management Icon">
+                <img src="{% static 'Customers management.png' %}" alt="Customers Management Icon">
             </div>
             <h4 class="text-xl font-semibold text-green-700 mb-3 text-center">Customers Management</h4>
             <p class="text-gray-600 text-center">Add information about your customers and consult them.</p>
@@ -30,7 +31,7 @@
         <div class="bg-white p-6 rounded-lg shadow-lg hover:shadow-xl transition duration-300 border border-gray-200">
             <a href="{% url 'transaction_list' %}">
             <div class="flex items-center justify-center mb-4 mx-auto">
-                <img src="static/Finance management.png" alt="Financial Tracking Icon">
+                <img src="{% static 'Finance management.png' %}" alt="Financial Tracking Icon">
             </div>
             <h4 class="text-xl font-semibold text-green-700 mb-3 text-center">Financial Tracking</h4>
             <p class="text-gray-600 text-center">Manage expenses, revenues, and generate comprehensive financial reports. (In construction)</p>
@@ -39,7 +40,7 @@
         <div class="bg-white p-6 rounded-lg shadow-lg hover:shadow-xl transition duration-300 border border-gray-200">
             <a href="{% url 'products' %}">
             <div class="flex items-center justify-center mb-4 mx-auto">
-                <img src="static/Equipment management.png" alt="Equipment Management Icon">
+                <img src="{% static 'Equipment management.png' %}" alt="Equipment Management Icon">
             </div>
             <h4 class="text-xl font-semibold text-green-700 mb-3 text-center">Equipment & Inventory</h4>
             <p class="text-gray-600 text-center">Keep track of your machinery, tools, and inventory levels. (In construction)</p>

@@ -14,6 +14,7 @@ services:
     environment:
       - DATABASE_URL=postgres://agricore_user:agricore_pass@agricore-db:5432/agricore_db
       - DEBUG=1
+      - ALLOWED_HOSTS=127.0.0.1,localhost,0.0.0.0,[::1]
     depends_on:
       - agricore-db
 
